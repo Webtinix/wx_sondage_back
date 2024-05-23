@@ -112,7 +112,7 @@ Route::controller(AppController::class)->group(function () {
 
     Route::controller(InfusioController::class)->group(function () {
         #get
-        Route::get('/{company}/{lang}/{class}/{instance?}', 'formation');
+        Route::get('/{company}/{lang}/{class}/{instance?}', 'getClass');
         # POST
         Route::post('/{company}/{lang}/{class}/{instance_id?}', 'post');
         # PUT

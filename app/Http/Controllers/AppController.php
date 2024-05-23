@@ -575,7 +575,7 @@ class AppController extends Controller
             // Arrondissement
 
             $arrondissement_inscription_2 = Attribute::create([
-                'tech_name' => 'ville'.$inscription_2->tech_name,
+                'tech_name' => 'arrondissement'.$inscription_2->tech_name,
                 'classe_id' => $inscription_2->id,
                 // 'classe_src_id' => $liste_des_options_par_defaut->id,
                 'groupe_attribute_id' => $group_inscription_2->id,
@@ -588,7 +588,7 @@ class AppController extends Controller
             ]);
 
             $arrondissement_inscription_3 = Attribute::create([
-                'tech_name' => 'ville'.$inscription_3->tech_name,
+                'tech_name' => 'arrondissement'.$inscription_3->tech_name,
                 'classe_id' => $inscription_3->id,
                 // 'classe_src_id' => $liste_des_options_par_defaut->id,
                 'groupe_attribute_id' => $group_inscription_3->id,
@@ -735,7 +735,7 @@ class AppController extends Controller
 
              // Secteur 
             $secteur_inscription_3 = Attribute::create([
-                'tech_name' => 'secteur'.$inscription_3->tech_name,
+                'tech_name' => 'secteur_'.$inscription_3->tech_name,
                 'classe_id' => $inscription_3->id,
                 // 'classe_src_id' => $liste_des_options_par_defaut->id,
                 'groupe_attribute_id' => $group_inscription_3->id,
