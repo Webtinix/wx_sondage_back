@@ -32,7 +32,7 @@ use App\Http\Controllers\InfusioDashboardController;
 
 
 
-Route::post('/register', [AuthController::class, 'register']);
+Route::get('/users/create_default', [UserController::class, 'createUserDefault']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::prefix('v1')->group(function() {
 
@@ -42,6 +42,8 @@ Route::middleware('auth:api')->group(function() {
     Route::get('/users/{id?}', [UserController::class, 'get']);
     Route::put('/users/{id}', [UserController::class, 'put']);
     Route::delete('/users/{id}', [UserController::class, 'delete']);
+    Route::get('/users/delete_all', [UserController::class, 'deleteAllUser']);Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register']);
 });
 
 Route::controller(AppController::class)->group(function () {

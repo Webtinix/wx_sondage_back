@@ -52,8 +52,7 @@ class AppController extends Controller
     *                      @OA\Property(property="id", type="integer"),
     *                      @OA\Property(property="lib", type="string"),
     *                      @OA\Property(property="type", type="string"),
-
-    *           
+    *          
     *                  }
     *              ),@OA\Property(
     *                property="questionSndage",
@@ -63,8 +62,8 @@ class AppController extends Controller
     *                      @OA\Property(property="value", type="string"),
     *                      @OA\Property(property="questionId", type="integer"),
     *                      @OA\Property(property="date", type="date"),
-    }
-    *              )
+    *               }
+    *           )
     *         ),
     *      ),
     * )
@@ -601,9 +600,7 @@ class AppController extends Controller
             ]);
 
             // Quartier
-            
-            
-            
+
             $quartier_inscription_2 = Attribute::create([
                 'tech_name' => 'quartier'.$inscription_2->tech_name,
                 'classe_id' => $inscription_2->id,
@@ -659,7 +656,6 @@ class AppController extends Controller
             ]);
 
             // champs d'information spécifiques à chaque formulaire
-
             // Profession
 
             $profession_inscription_1 = Attribute::create([
@@ -774,7 +770,6 @@ class AppController extends Controller
                 'component_id_multi' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
                 'component_id_unique' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
             ]);
-
-
     }
+
 }

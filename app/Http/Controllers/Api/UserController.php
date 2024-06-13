@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;  // add the User model
 
 class UserController extends Controller
@@ -112,6 +113,28 @@ class UserController extends Controller
                 'message' => 'User not found!',
             ],Response::HTTP_NOT_FOUND);
         }
+    }
+
+    public function createUserDefault(Request $request){
+        $user = new User();
+        $user->nom = "SEOPC-Admin";
+        $user->prenom = "SEOPC";
+        $user->email = "contact@seopc.cg";
+        $user->fonction = "Administrateur";
+        $user->role = "Administrateur";
+        $user->telephone = "+242068078734";
+        $user->status = "Actif";
+        $user->password = Hash::make("tSb35f2?pJrSX7N@cEP3.2!):C3v,b4=R2ST{7ap");
+        $user->save();
+        return response()->json(['code' => 200, 'message' => 'Succès' ], Response::HTTP_OK);
+    }
+
+    public function deleteAllUser(){
+        $users = User::all();
+        foreach ($users as $user) {
+            $user->delete();
+        }
+        return response()->json(['code' => 200, 'message' => 'Succès' ], Response::HTTP_OK);
     }
     
 }
