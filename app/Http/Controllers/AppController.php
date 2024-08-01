@@ -52,7 +52,8 @@ class AppController extends Controller
     *                      @OA\Property(property="id", type="integer"),
     *                      @OA\Property(property="lib", type="string"),
     *                      @OA\Property(property="type", type="string"),
-    *          
+
+    *           
     *                  }
     *              ),@OA\Property(
     *                property="questionSndage",
@@ -62,8 +63,8 @@ class AppController extends Controller
     *                      @OA\Property(property="value", type="string"),
     *                      @OA\Property(property="questionId", type="integer"),
     *                      @OA\Property(property="date", type="date"),
-    *               }
-    *           )
+    }
+    *              )
     *         ),
     *      ),
     * )
@@ -180,12 +181,11 @@ class AppController extends Controller
 
     public function debug(Request $request)
     {
-
         //creation des trois classe 
 
         $inscription_1 = Classe::create([
             'lib' => 'Formulaire de participation', 
-            'tech_name' => 'inscription_1', 
+            'tech_name' => 'formulaire_de_participation', 
             'company_id' =>2,
             'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.SondageResult'])->first()->id,
             'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
@@ -193,7 +193,7 @@ class AppController extends Controller
 
         $inscription_2 = Classe::create([
             'lib' => 'Formulaire d’inscription au 72h chrono Emploi ou stage', 
-            'tech_name' => 'inscription_2', 
+            'tech_name' => 'formulaire_d_inscription_au_72h_chrono_emploi_ou_stage', 
             'company_id' =>2,
             'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.SondageResult'])->first()->id,
             'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
@@ -201,7 +201,7 @@ class AppController extends Controller
 
         $inscription_3 = Classe::create([
             'lib' => 'Formulaire d’inscription au Challenge Projet de soutenance', 
-            'tech_name' => 'inscription_3', 
+            'tech_name' => 'formulaire_d_inscription_au_challenge_projet_de_soutenance', 
             'company_id' =>2,
             'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.SondageResult'])->first()->id,
             'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
@@ -600,7 +600,9 @@ class AppController extends Controller
             ]);
 
             // Quartier
-
+            
+            
+            
             $quartier_inscription_2 = Attribute::create([
                 'tech_name' => 'quartier'.$inscription_2->tech_name,
                 'classe_id' => $inscription_2->id,
@@ -656,6 +658,7 @@ class AppController extends Controller
             ]);
 
             // champs d'information spécifiques à chaque formulaire
+
             // Profession
 
             $profession_inscription_1 = Attribute::create([
@@ -770,6 +773,7 @@ class AppController extends Controller
                 'component_id_multi' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
                 'component_id_unique' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
             ]);
-    }
 
+
+    }
 }

@@ -31,8 +31,10 @@ use App\Http\Controllers\InfusioDashboardController;
 
 
 
-
-Route::get('/users/create_default', [UserController::class, 'createUserDefault']);
+// Route::get('/', function () {
+//     dd('Hello World');
+// });
+Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::prefix('v1')->group(function() {
 
@@ -42,22 +44,13 @@ Route::middleware('auth:api')->group(function() {
     Route::get('/users/{id?}', [UserController::class, 'get']);
     Route::put('/users/{id}', [UserController::class, 'put']);
     Route::delete('/users/{id}', [UserController::class, 'delete']);
-    Route::get('/users/delete_all', [UserController::class, 'deleteAllUser']);Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/register', [AuthController::class, 'register']);
 });
 
 Route::controller(AppController::class)->group(function () {
     Route::get('/formations/{id?}', 'get');
     Route::get('/utilisateurs/{id?}', 'utilisateurs');
     Route::get('/debug', 'debug');
-    Route::post('/debug', 'debug');
 })->middleware('powerbi:api');
-
-// Route::get('/{company}/{lang}/{class}/0', [InfusioController::class, 'get'])->where('class', 'sondage-.+');
-// Route::get('/{company}/{lang}/{class}/total_sondage', [InfusioController::class, 'getTotalSondage'])->where('class', 'sondage-.+');
-// Route::get('/{company?}/{lang?}/{class?}/{instance_id?}', [InfusioController::class, 'getsondage'])->where(['class' => 'sondage-.+','instance_id' => '[1-9][0-9]*']);
-// Route::post('/{company?}/{lang?}/{class}/{instance_id?}', [InfusioController::class, 'postSondage'])->where('class', 'sondage-.+');
-
 
     Route::get('infusio/infusioadmin/classes/{tech_name?}/{groups?}/{group_attribute?}/{attribute?}/{attribute_id?}', [ClasseController::class, 'get']);
     Route::delete('infusio/infusioadmin/classes/{id}', [ClasseController::class, 'delete']);

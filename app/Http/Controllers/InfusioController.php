@@ -30,9 +30,12 @@ class InfusioController extends Controller
     // Ajouter les attributs component multi et unique à Groupe, Attributs
 
     protected $user;
+    protected $key_api;  
     public function __construct(User $user)
     {
         $this->user = $user;
+        $this->key_api = 'wx-qf3tLXbrXtdA7Tx@$AiR&md!8eooaYhrAzn3GjPzPe7iaFbJx$ga3QEYYaKzXqiih&QBnaHXetjnjxcxqf3tiaFbJx$ga3QEYYaKzXqiih';
+        
     }
     
     public function get(Request $request, $company_uid, $lang_iso , $class_tech_name, $instance_id = "0")
@@ -82,8 +85,8 @@ class InfusioController extends Controller
         // dd(auth()->user()->id);
 
         $token = $request->header('API-KEY');
-        // dd($token);
-        if ($token != env('WX_KEY')) {
+        // dd($this->key_api,$token);
+        if ($token != $this->key_api) {
             return response()->json(['code' => 401, 'message' => 'Unauthorized'], 401);
         }
 
@@ -130,13 +133,11 @@ class InfusioController extends Controller
     public function post(Request $request, $company_uid, $lang_iso, $class_tech_name )
     {
         
-        $token = $request->header('API-KEY');
-        // dd($token);
-        if ($token != env('WX_KEY')) {
+        $token = $request->header('API-KEY');        
+        if ($token != $this->key_api) {
             return response()->json(['code' => 401, 'message' => 'Unauthorized'], 401);
         }
         try {
-            // dd($company_uid, $lang_iso, $class_tech_name);
             $company = null;
             $lang = null;
             if ($company_uid != null) {
@@ -156,16 +157,11 @@ class InfusioController extends Controller
                 # code...
                 return response()->json(['code' => 404, 'message' => 'La classe '.$class_tech_name.' n\'existe pas' ],Response::HTTP_NOT_FOUND);
             }
-            // dd($company, $lang, $class_tech_name, $class);
             $instance = null;
             $data_create_ins = ['classe_id' => $class->id, 'parent_id' => null];
 
             $instance = Instance::create($data_create_ins);
             $data = $request->json()->all()['data'];
-            // $data['auto_generate_formateur_id'] = auth()->user()->id;
-            // $data['auto_generate_formateur'] = auth()->user()->prenom.' '.auth()->user()->nom;
-
-            // $lib_formation = '';
             try {
                 foreach($data as $key => $value) {
                     $attribute = Attribute::where(['tech_name' => $key, 'classe_id' => $class->id])->first();
@@ -182,7 +178,7 @@ class InfusioController extends Controller
                 //throw $th;
                 
             }
-            // En particulier si le classe est formation, on va creer un sondage
+            // En particulier si la classe est formation, on va creer un sondage
             // if ($class_tech_name =='formation') {
             //     //On va dater la creation de la formation 
             //     try {
@@ -237,7 +233,8 @@ class InfusioController extends Controller
         
         $token = $request->header('API-KEY');
         // dd($token);
-        if ($token != env('WX_KEY')) {
+        
+	if ($token != $this->key_api) {
             return response()->json(['code' => 401, 'message' => 'Unauthorized'], 401);
         }
 
@@ -284,7 +281,8 @@ class InfusioController extends Controller
     {
         $token = $request->header('API-KEY');
         // dd($token);
-        if ($token != env('WX_KEY')) {
+        
+	if ($token != $this->key_api) {
             return response()->json(['code' => 401, 'message' => 'Unauthorized'], 401);
         }
         try {
