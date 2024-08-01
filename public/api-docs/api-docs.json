@@ -1,0 +1,188 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "'Satisfaction Client' API Documentation",
+        "description": "API Documentation for 'Satisfaction Client' Project",
+        "version": "1.0"
+    },
+    "paths": {
+        "/api/v1/formations/{id?}": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Liste des Formations",
+                "description": "Formations List Endpoint.",
+                "operationId": "2bfb01e7323c69439ca39a3de34fde10",
+                "parameters": [
+                    {
+                        "name": "API-KEY",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "formations": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "libelle": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": "string"
+                                                },
+                                                "nombreEtudiants": {
+                                                    "type": "integer"
+                                                },
+                                                "utilisateurId": {
+                                                    "type": "integer"
+                                                },
+                                                "createAt": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                },
+                                                "updateAt": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "reponseSondage": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "lib": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "questionSndage": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "value": {
+                                                    "type": "string"
+                                                },
+                                                "questionId": {
+                                                    "type": "integer"
+                                                },
+                                                "date": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/utilisateurs/{id?}": {
+            "get": {
+                "tags": [
+                    "utilisateurs"
+                ],
+                "summary": "Liste des utilisateurs",
+                "description": "Point de terminaison Liste des utilisateurs.",
+                "operationId": "8a72f6b24891509cd27b01abfe62318a",
+                "parameters": [
+                    {
+                        "name": "API-KEY",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "utilisateurs": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "nom": {
+                                                    "type": "string"
+                                                },
+                                                "prenom": {
+                                                    "type": "string"
+                                                },
+                                                "telephone": {
+                                                    "type": "string"
+                                                },
+                                                "role": {
+                                                    "type": "string"
+                                                },
+                                                "fonction": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "createAt": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                },
+                                                "updateAt": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
