@@ -31,9 +31,7 @@ use App\Http\Controllers\InfusioDashboardController;
 
 
 
-// Route::get('/', function () {
-//     dd('Hello World');
-// });
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::prefix('v1')->group(function() {
@@ -50,7 +48,17 @@ Route::controller(AppController::class)->group(function () {
     Route::get('/formations/{id?}', 'get');
     Route::get('/utilisateurs/{id?}', 'utilisateurs');
     Route::get('/debug', 'debug');
+    Route::post('/debug', 'debug');
 })->middleware('powerbi:api');
+
+//recuperation du nombre total des reponses d'un sondage
+
+Route::get('/{company}/{lang}/{class}/sondage/nombre_total_reponses', [InfusioController::class, 'get_nombre_total_reponses'])->where('class', 'sondage-.+');
+
+Route::get('/{company}/{lang}/{class}/0', [InfusioController::class, 'get'])->where('class', 'sondage-.+');
+Route::get('/{company}/{lang}/{class}/total_sondage', [InfusioController::class, 'getTotalSondage'])->where('class', 'sondage-.+');
+Route::get('/{company?}/{lang?}/{class?}/{instance_id?}', [InfusioController::class, 'getsondage'])->where(['class' => 'sondage-.+','instance_id' => '[1-9][0-9]*']);
+Route::post('/{company?}/{lang?}/{class}/{instance_id?}', [InfusioController::class, 'postSondage'])->where('class', 'sondage-.+');
 
     Route::get('infusio/infusioadmin/classes/{tech_name?}/{groups?}/{group_attribute?}/{attribute?}/{attribute_id?}', [ClasseController::class, 'get']);
     Route::delete('infusio/infusioadmin/classes/{id}', [ClasseController::class, 'delete']);
@@ -69,14 +77,14 @@ Route::controller(AppController::class)->group(function () {
     Route::post('infusio/infusioadmin/companys', [CompanyController::class, 'post']);
 
     // liste des routes pour le crud des components
-    
+
     Route::get('infusio/infusioadmin/component/{id?}', [ComponentController::class, 'get']);
     Route::delete('infusio/infusioadmin/component/{id}', [ComponentController::class, 'delete']);
     Route::put('infusio/infusioadmin/component/{id}', [ComponentController::class, 'put']);
     Route::post('infusio/infusioadmin/component', [ComponentController::class, 'post']);
 
     // liste des routes pour le crud des Langs
-    
+
     Route::get('infusio/infusioadmin/lang/{id?}', [LangController::class, 'get']);
     Route::delete('infusio/infusioadmin/lang/{id}', [LangController::class, 'delete']);
     Route::put('infusio/infusioadmin/lang/{id}', [LangController::class, 'put']);
@@ -102,30 +110,22 @@ Route::controller(AppController::class)->group(function () {
     Route::delete('infusio/infusioadmin/groupeAttributes/{id}', [GroupeAttributeController::class, 'delete']);
     Route::put('infusio/infusioadmin/groupeAttributes/{id}', [GroupeAttributeController::class, 'put']);
     Route::post('infusio/infusioadmin/groupeAttributes', [GroupeAttributeController::class, 'post']);
-    
+
     # Authentificate routes
 
     Route::controller(InfusioController::class)->group(function () {
         #get
-        Route::get('/{company}/{lang}/{class}/{instance?}', 'getClass');
+        Route::get('/{company}/{lang}/formation/{instance?}', 'formation');
         # POST
-        Route::post('/{company}/{lang}/{class}/{instance_id?}', 'post');
+        Route::post('/{company?}/{lang?}/formation', 'post');
         # PUT
-        Route::put('/{company?}/{lang?}/{class} /{instance?}', 'put');
+        Route::put('/{company?}/{lang?}/formation/{instance?}', 'put');
         # DELETE
         Route::delete('/{company?}/{lang?}/{class?}/{instance?}', 'delete');
 
-        //inscription
-
-        #get
-        // Route::get('/{company}/{lang}/inscription/{instance?}', 'inscription');
-        // # POST
-        // Route::post('/{company}/{lang}/inscription/{instance_id?}', 'post_inscription');
-        // # PUT
-        // Route::put('/{company?}/{lang?}/inscription/{instance?}', 'put_inscription');
-        // # DELETE
-        // Route::delete('/{company?}/{lang?}/{class?}/{instance?}', 'delete_inscription');
-    });
+        #uppdate nombre d etudiant sur une formation
+        Route::put('/{company?}/{lang?}/formation/{instance?}/nb_etudiants/{nb?}', 'putNbEtudiant');
+    })->middleware('auth:api');
 
 
 

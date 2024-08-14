@@ -16,30 +16,22 @@ class UserController extends Controller
     }
 
     public function me()
-    {
-        try {
-            return response()->json([
-                'meta' => [
-                    'code' => 200,
-                    'status' => 'success',
-                    'message' => 'User fetched successfully!',
-                ],
-                'data' => [
-                    'user' => auth()->user(),
-                ],
-            ]);
-                        return response()->json(['code' => 200, 'message' => 'Succès' ], Response::HTTP_OK);
+{
 
-        } catch (\Throwable $th) {
-            //throw $th;
-            return response()->json([
-                'meta' => [
-                    'code' => 500,
-                    'status' => 'error',
-                ]
-                ]);
-        }
-    }
+        return response()->json([
+            'meta' => [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'User fetched successfully!',
+            ],
+            'data' => [
+                'user' => auth()->user(),
+            ],
+        ], 200);  // Ajout du code de statut HTTP directement
+
+    
+}
+
 
     public function get($id = null) {
         try {
@@ -77,8 +69,7 @@ class UserController extends Controller
             $user->telephone = $request->telephone;
             $user->status = $request->status;
             if ($request->password != "") {
-                # code...
-                $user->password = $request->password;
+                $user->password = bcrypt($request->password) ;
             }
 
             $user->save();

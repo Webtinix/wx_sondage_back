@@ -74,14 +74,12 @@ class AuthController extends Controller
             'email' => 'required|string',
             'password' => 'required|string',
         ]);
-
+        // dd($request->all());
         // attempt a login (validate the credentials provided)
         $token = auth()->attempt([
             'email' => $request->email,
             'password' => $request->password,
         ]);
-
-        // dd($token);
         // if token successfully generated then display success response
         // if attempt failed then "unauthenticated" will be returned automatically
         if ($token)
@@ -111,7 +109,7 @@ class AuthController extends Controller
                     'status' => 'error',
                     'message' => 'Invalid credentials.',
                 ],
-                'data' => [],
+                // 'data' => [],
             ]);
         }
     }

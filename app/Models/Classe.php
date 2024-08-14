@@ -207,6 +207,7 @@ class Classe extends Model
             $attribute_option = Attribute::create([
                 'tech_name' => 'attribute_option'.$liste_des_options_par_defaut->tech_name,
                 'classe_id' => $liste_des_options_par_defaut->id,
+                // 'classe_src_id' => $liste_des_options_par_defaut->id,
                 'groupe_attribute_id' => $group_liste_des_options_par_defaut->id,
                 'lib' => 'Très mécontent',
                 'position' => 1,
@@ -226,6 +227,44 @@ class Classe extends Model
             $instance4 = Instance::create($data_create_ins);
             Data::create(['instance_id' => $instance4->id, 'class_id' => $liste_des_options_par_defaut->id, 'value' =>'Tres satisfait' , 'attribute_id' => $attribute_option->id]);
 
+            // $attribute_option_2 = Attribute::create([
+            //     'tech_name' => 'mecontent'.$liste_des_options_par_defaut->tech_name,
+            //     'classe_id' => $liste_des_options_par_defaut->id,
+            //     // 'classe_src_id' => $liste_des_options_par_defaut->id,
+            //     'groupe_attribute_id' => $group_liste_des_options_par_defaut->id,
+            //     'lib' => 'Mécontent',
+            //     'position' => 2,
+            //     'required' => 0,
+            //     'component_id' =>  Component::where(['lib' => 'com.webtinix.infusio.server.InputText'])->first()->id,
+            //     'component_id_multi' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
+            //     'component_id_unique' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
+            // ]);
+    
+            // $attribute_option_3 = Attribute::create([
+            //     'tech_name' => 'satisfait'.$liste_des_options_par_defaut->tech_name,
+            //     'classe_id' => $liste_des_options_par_defaut->id,
+            //     // 'classe_src_id' => $liste_des_options_par_defaut->id,
+            //     'groupe_attribute_id' => $group_liste_des_options_par_defaut->id,
+            //     'lib' => 'Satisfait',
+            //     'position' => 3,
+            //     'required' => 0,
+            //     'component_id' =>  Component::where(['lib' => 'com.webtinix.infusio.server.InputText'])->first()->id,
+            //     'component_id_multi' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
+            //     'component_id_unique' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
+            // ]);
+    
+            // $attribute_option_4 = Attribute::create([
+            //     'tech_name' => 'tres_satisfait'.$liste_des_options_par_defaut->tech_name,
+            //     'classe_id' => $liste_des_options_par_defaut->id,
+            //     // 'classe_src_id' => $liste_des_options_par_defaut->id,
+            //     'groupe_attribute_id' => $group_liste_des_options_par_defaut->id,
+            //     'lib' => 'Très satisfait',
+            //     'position' => 4,
+            //     'required' => 0,
+            //     'component_id' =>  Component::where(['lib' => 'com.webtinix.infusio.server.InputText'])->first()->id,
+            //     'component_id_multi' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
+            //     'component_id_unique' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
+            // ]);
         }
         // recupereration du premier groupe
 

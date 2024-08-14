@@ -30,16 +30,13 @@ class InfusioController extends Controller
     // Ajouter les attributs component multi et unique à Groupe, Attributs
 
     protected $user;
-    protected $key_api;  
     public function __construct(User $user)
     {
         $this->user = $user;
-        $this->key_api = 'wx-qf3tLXbrXtdA7Tx@$AiR&md!8eooaYhrAzn3GjPzPe7iaFbJx$ga3QEYYaKzXqiih&QBnaHXetjnjxcxqf3tiaFbJx$ga3QEYYaKzXqiih';
-        
     }
-    
+
     public function get(Request $request, $company_uid, $lang_iso , $class_tech_name, $instance_id = "0")
-    {   
+    {
         $company = null;
         $lang = null;
         if ($company_uid != null) {
@@ -58,37 +55,50 @@ class InfusioController extends Controller
                 return response()->json(['code' => 404, 'message' => 'La classe '.$class_tech_name.' n\'existe pas' ],Response::HTTP_NOT_FOUND);
             }
             $me = $class->me($lang->id);
-            $t = explode('-', $class_tech_name);
-            // dd($t[1]);
-            $i = Instance::where(['id' => $t[1]])->first();
-            $a = Attribute::where(['tech_name' => 'auto_generate_formateur'])->first();
-            $d = Data::where(['attribute_id' => $a->id, 'instance_id' => $i->id])->first();
-            $f = $d->value;
-
             $infusioJson = [
                 'class' => $me['class'],
                 'groupe_attributes' => $class->getmyAttributeGroups($lang->id,null,true),
-                'instances' =>$class->getmyInstances($lang->id,$instance_id,true,$class->tech_name ),
+                'instances' =>$class->getmyInstances($lang->id,$instance_id,true),
             ];
-            $infusioJson['class']['formateur'] = $f;
             return response()->json($infusioJson,Response::HTTP_OK);
         }
     }
 
-    public function getClass(Request $request, $company_uid ,  $lang_iso , $class_tech_name,  $instance = null)
-    {
-        // dd($company_uid, $lang_iso, $class_tech_name, $instance);
-        // if (empty(auth()->user())) {
-        //     # code...
-        //     return response()->json(['code' => 401, 'message' => 'Vous devez vous connecter' ],Response::HTTP_UNAUTHORIZED);
-        // }
-        // dd(auth()->user()->id);
-
-        $token = $request->header('API-KEY');
-        // dd($this->key_api,$token);
-        if ($token != $this->key_api) {
-            return response()->json(['code' => 401, 'message' => 'Unauthorized'], 401);
+    public function get_nombre_total_reponses(Request $request, $company_uid, $lang_iso , $class )
+    {   
+        $company = null;
+        $lang = null;
+        if ($company_uid != null) {
+            # code...
+            $company = Company::where(['uid' => $company_uid])->first();
         }
+
+        if ($lang_iso != null) {
+            # code...
+            $lang = Lang::where(['iso' => $lang_iso])->first();
+        }
+        
+        if($class != null) {
+            $class = Classe::where(['tech_name' => $class, 'company_id' => $company->id])->first();
+            if ($class == null) {
+                # code...
+                return response()->json(['code' => 404, 'message' => 'La classe '.$class.' n\'existe pas' ],Response::HTTP_NOT_FOUND);
+            }
+            $total_result =  Instance::where(['classe_id' => $class->id])->count();
+            // dd($me);
+            return response()->json(['total_result' => $total_result],Response::HTTP_OK);
+        }
+    }
+
+
+    public function formation(Request $request, $company_uid ,  $lang_iso , $instance = null )
+    {
+        $class_tech_name = "formation" ;
+        if (empty(auth()->user())) {
+            # code...
+            return response()->json(['code' => 401, 'message' => 'Vous devez vous connecter' ],Response::HTTP_UNAUTHORIZED);
+        }
+        // dd(auth()->user()->id);
 
         $instance_id = $instance;
         $company = null;
@@ -97,12 +107,11 @@ class InfusioController extends Controller
             # code...
             $company = Company::where(['uid' => $company_uid])->first();
         }
-        
+
         if ($lang_iso != null) {
             # code...
             $lang = Lang::where(['iso' => $lang_iso])->first();
         }
-        // dd($company, $lang,  $company->id);
         if($class_tech_name != null) {
             $class = Classe::where(['tech_name' => $class_tech_name, 'company_id' => $company->id])->first();
             if ($class == null) {
@@ -120,24 +129,22 @@ class InfusioController extends Controller
             // dd($me);
             $infusioJson = [
                 'class' => $me['class'],
-                // 'groupe_attributes' => $me['attributes'],
-                // 'instances' => $me['instances'],
                 'groupe_attributes' => $class->getmyAttributeGroups($lang->id,$instance_id,$form_empty),
                 'instances' =>$class->getmyInstances($lang->id,$instance_id,$form_empty, $class->tech_name ),
             ];
             return response()->json($infusioJson,Response::HTTP_OK);
         }
-        // $component = Infusio::renderComponent('com.webtinix.infusio.server.DataTable');
     }
 
-    public function post(Request $request, $company_uid, $lang_iso, $class_tech_name )
+    public function post(Request $request, $company_uid = null, $lang_iso = null, $instance_id = null )
     {
-        
-        $token = $request->header('API-KEY');        
-        if ($token != $this->key_api) {
-            return response()->json(['code' => 401, 'message' => 'Unauthorized'], 401);
+        if (empty(auth()->user()) || auth()->user()->role != "admin") {
+            # code...
+            return response()->json(['code' => 401, 'message' => 'Vous devez vous connecter en tant qu\'admin' ],Response::HTTP_UNAUTHORIZED);
         }
+        $class_tech_name = 'formation';
         try {
+            // dd($company_uid, $lang_iso, $class_tech_name);
             $company = null;
             $lang = null;
             if ($company_uid != null) {
@@ -157,11 +164,16 @@ class InfusioController extends Controller
                 # code...
                 return response()->json(['code' => 404, 'message' => 'La classe '.$class_tech_name.' n\'existe pas' ],Response::HTTP_NOT_FOUND);
             }
+            // dd($company, $lang, $class_tech_name, $class);
             $instance = null;
             $data_create_ins = ['classe_id' => $class->id, 'parent_id' => null];
 
             $instance = Instance::create($data_create_ins);
             $data = $request->json()->all()['data'];
+            $data['auto_generate_formateur_id'] = auth()->user()->id;
+            $data['auto_generate_formateur'] = auth()->user()->prenom.' '.auth()->user()->nom;
+
+            $lib_formation = '';
             try {
                 foreach($data as $key => $value) {
                     $attribute = Attribute::where(['tech_name' => $key, 'classe_id' => $class->id])->first();
@@ -169,82 +181,165 @@ class InfusioController extends Controller
                         $attribute->managerAttributeSimpleData((!empty($value) ? $value : "Aucune réponse"), $instance->id);
                     }
     
-                    // if (trim($key) == 'lib' && $class_tech_name =='formation') {
-                    //     $lib_formation = $value;
-                    // }
+                    if (trim($key) == 'lib' && $class_tech_name =='formation') {
+                        $lib_formation = $value;
+                    }
                     
                 }
             } catch (\Throwable $th) {
                 //throw $th;
                 
             }
-            // En particulier si la classe est formation, on va creer un sondage
-            // if ($class_tech_name =='formation') {
-            //     //On va dater la creation de la formation 
-            //     try {
-            //         //code...
-            //         foreach (['date_modification'=> date('d/m/Y H:i:s'), 'date_creation' => date('d/m/Y H:i:s') ] as $key => $value) {
-            //             # code...
-            //             $attribute = Attribute::where(['tech_name' => $key, 'classe_id' => $class->id])->first();
-            //             $attribute->managerAttributeSimpleData($value, $instance->id);
-            //             # code...
-            //         }
-            //     } catch (\Throwable $th) {
-            //         //throw $th;
-            //     }
-            //     $class_sondage = Classe::create([
-            //         'lib' => $lib_formation, 
-            //         'tech_name' => 'sondage-'.$instance->id, 
-            //         'company_id' => $company->id,
-            //         'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.SondageResult'])->first()->id,
-            //         'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
-            //     ]);
-            //     // $group = GroupeAttribute::create(['classe_id' => $class_sondage->id, 'position' => 1, 'lib' => 'Sondage']);
-            //     $gac = Component::where(['lib' => 'com.webtinix.infusio.GroupeAttributes'])->first();
-            //     $group = GroupeAttribute::create(['classe_id' => $class_sondage->id, 'position' => 1, 'lib' => 'Sondage ' . $class_sondage->id, 'attr' => '{"className":"grid gap-4"}', 'component_id_multi' => $gac->id, 'component_id_unique' => $gac->id]);
-            //     $comment_group = GroupeAttribute::create(['classe_id' => $class_sondage->id, 'position' => 2, 'lib' => 'Commentaire','attr' => '{"className":"grid gap-4"}', 'component_id_multi' => $gac->id, 'component_id_unique' => $gac->id]);
-            //     $attribute_sub = Attribute::create([
-            //         'tech_name' => 'commentaire'.$class_sondage->tech_name,
-            //         'classe_id' => $class_sondage->id,
-            //         'groupe_attribute_id' => $comment_group->id,
-            //         'lib' => 'Commentaire',
-            //         'position' => 1,
-            //         'required' => 0,
-            //         'component_id' =>  Component::where(['lib' => 'com.webtinix.infusio.server.TextArea'])->first()->id,
-            //         'component_id_multi' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
-            //         'component_id_unique' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
-            //     ]);
+            // En particulier si le classe est formation, on va creer un sondage
+            if ($class_tech_name =='formation') {
+                //On va dater la creation de la formation 
+                try {
+                    //code...
+                    foreach (['date_modification'=> date('d/m/Y H:i:s'), 'date_creation' => date('d/m/Y H:i:s') ] as $key => $value) {
+                        # code...
+                        $attribute = Attribute::where(['tech_name' => $key, 'classe_id' => $class->id])->first();
+                        $attribute->managerAttributeSimpleData($value, $instance->id);
+                        # code...
+                    }
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
+                $class_sondage = Classe::create([
+                    'lib' => $lib_formation, 
+                    'tech_name' => 'sondage-'.$instance->id, 
+                    'company_id' => $company->id,
+                    'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.SondageResult'])->first()->id,
+                    'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
+                ]);
+                // $group = GroupeAttribute::create(['classe_id' => $class_sondage->id, 'position' => 1, 'lib' => 'Sondage']);
+                $gac = Component::where(['lib' => 'com.webtinix.infusio.GroupeAttributes'])->first();
+                $group = GroupeAttribute::create(['classe_id' => $class_sondage->id, 'position' => 1, 'lib' => 'Sondage ' . $class_sondage->id, 'attr' => '{"className":"grid gap-4"}', 'component_id_multi' => $gac->id, 'component_id_unique' => $gac->id]);
+                $comment_group = GroupeAttribute::create(['classe_id' => $class_sondage->id, 'position' => 2, 'lib' => 'Commentaire','attr' => '{"className":"grid gap-4"}', 'component_id_multi' => $gac->id, 'component_id_unique' => $gac->id]);
+                $attribute_sub = Attribute::create([
+                    'tech_name' => 'commentaire'.$class_sondage->tech_name,
+                    'classe_id' => $class_sondage->id,
+                    'groupe_attribute_id' => $comment_group->id,
+                    'lib' => 'Commentaire',
+                    'position' => 1,
+                    'required' => 0,
+                    'component_id' =>  Component::where(['lib' => 'com.webtinix.infusio.server.TextArea'])->first()->id,
+                    'component_id_multi' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
+                    'component_id_unique' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
+                ]);
 
-            //     // création du formulaire par defaut 
-            //     $class_sondage->defaultQuestions();
-            //     //creation du data pour lier le sondage avec la formation id_sondage_formation
-            //     $id_sondage_formation = Attribute::where(['tech_name' => 'id_sondage_formation'])->first()->id;
-            //     Data::create(['instance_id' => $instance->id, 'class_id' => $class->id, 'value' => $data['lib'], 'classe_id_src'=> $class_sondage->id, 'attribute_id' => $id_sondage_formation]);
-            // }
+                // création du formulaire par defaut 
+                $class_sondage->defaultQuestions();
+                //creation du data pour lier le sondage avec la formation id_sondage_formation
+                $id_sondage_formation = Attribute::where(['tech_name' => 'id_sondage_formation'])->first()->id;
+                Data::create(['instance_id' => $instance->id, 'class_id' => $class->id, 'value' => $data['lib'], 'classe_id_src'=> $class_sondage->id, 'attribute_id' => $id_sondage_formation]);
+            }
             return response()->json(['code' => 200, 'message' => $class_tech_name.' cree avec succes' ], Response::HTTP_OK);
         } catch (\Throwable $th) {
             //throw $th;
             return response()->json(['code' => 404, 'message' => $th->getMessage()], Response::HTTP_NOT_FOUND);
         }
+        // try {
+        //     // dd($company_uid, $lang_iso, $class_tech_name);
+        //     $company = null;
+        //     $lang = null;
+        //     if ($company_uid != null) {
+        //         # code...
+        //         $company = Company::where(['uid' => $company_uid])->first();
+        //     }
+        //     if ($lang_iso != null) {
+        //         # code...
+        //         $lang = Lang::where(['iso' => $lang_iso])->first();
+        //     }
+        //     $class = null;
+        //     if($class_tech_name != null) {
+        //         $class = Classe::where(['tech_name' => $class_tech_name, 'company_id' => $company->id])->first();
+        //     }
+        //     if ($class == null) {
+        //         # code...
+        //         return response()->json(['code' => 404, 'message' => 'La classe '.$class_tech_name.' n\'existe pas' ],Response::HTTP_NOT_FOUND);
+        //     }
+        //     // dd($company, $lang, $class_tech_name, $class);
+        //     $instance = null;
+        //     $data_create_ins = ['classe_id' => $class->id, 'parent_id' => null];
+
+        //     $instance = Instance::create($data_create_ins);
+        //     $data = $request->json()->all()['data'];
+        //     $data['auto_generate_formateur_id'] = auth()->user()->id;
+        //     // $data['auto_generate_formateur'] = auth()->user()->prenom.' '.auth()->user()->nom;
+        //     $data['auto_generate_formateur']= 'admin';
+        //     $lib_formation = '';
+        //     foreach($data as $key => $value) {
+        //         $attribute = Attribute::where(['tech_name' => $key, 'classe_id' => $class->id])->first();
+        //         $attribute->managerAttributeSimpleData((!empty($value) ? $value : "Aucune réponse"), $instance->id);
+        //         if (trim($key) == 'lib' && $class_tech_name =='formation') {
+        //             $lib_formation = $value;
+        //         }
+        //     }
+        //     // En particulier si le classe est formation, on va creer un sondage
+        //     if ($class_tech_name =='formation') {
+        //         //On va dater la creation de la formation
+        //         try {
+        //             //code...
+        //             foreach (['date_modification'=> date('d/m/Y H:i:s'), 'date_creation' => date('d/m/Y H:i:s') ] as $key => $value) {
+        //                 # code...
+        //                 $attribute = Attribute::where(['tech_name' => $key, 'classe_id' => $class->id])->first();
+        //                 $attribute->managerAttributeSimpleData($value, $instance->id);
+        //                 # code...
+        //             }
+        //         } catch (\Throwable $th) {
+        //             //throw $th;
+        //         }
+
+        //         $class_sondage = Classe::create([
+        //             'lib' => $lib_formation,
+        //             'tech_name' => 'sondage-'.$instance->id,
+        //             'company_id' => $company->id,
+        //             'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.SondageResult'])->first()->id,
+        //             'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
+        //         ]);
+
+        //         $gac = Component::where(['lib' => 'com.webtinix.infusio.GroupeAttributes'])->first();
+        //         $group = GroupeAttribute::create(['classe_id' => $class_sondage->id, 'position' => 1, 'lib' => 'Sondage ' . $class_sondage->id, 'attr' => '{"className":"grid gap-4"}', 'component_id_multi' => $gac->id, 'component_id_unique' => $gac->id]);
+
+        //         // Fin du formulaire par défaut
+        //         $comment_group = GroupeAttribute::create(['classe_id' => $class_sondage->id, 'position' => 2, 'lib' => 'Commentaire','attr' => '{"className":"grid gap-4"}', 'component_id_multi' => $gac->id, 'component_id_unique' => $gac->id]);
+        //         $attribute_sub = Attribute::create([
+        //             'tech_name' => 'commentaire'.$class_sondage->tech_name,
+        //             'classe_id' => $class_sondage->id,
+        //             'groupe_attribute_id' => $comment_group->id,
+        //             'lib' => 'Commentaire',
+        //             'position' => 1,
+        //             'required' => 0,
+        //             'component_id' =>  Component::where(['lib' => 'com.webtinix.infusio.server.TextArea'])->first()->id,
+        //             'component_id_multi' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
+        //             'component_id_unique' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
+        //         ]);
+
+        //         //creation du data pour lier le sondage avec la formation id_sondage_formation
+        //         $id_sondage_formation = Attribute::where(['tech_name' => 'id_sondage_formation'])->first()->id;
+        //         Data::create(['instance_id' => $instance->id, 'class_id' => $class->id, 'value' => $data['lib'], 'classe_id_src'=> $class_sondage->id, 'attribute_id' => $id_sondage_formation]);
+        //     }
+        //     return response()->json(['code' => 200, 'message' => $class_tech_name.' cree avec succes' ], Response::HTTP_OK);
+        // } catch (\Throwable $th) {
+        //     //throw $th;
+        //     return response()->json(['code' => 404, 'message' => $th->getMessage()], Response::HTTP_NOT_FOUND);
+        // }
     }
 
-    public function put(Request $request , $company_uid, $lang_iso ,$class_tech_name, $instance_id)
+    public function put(Request $request , $company_uid = null, $lang_iso = null, $instance_id = null)
     {
-        
-        $token = $request->header('API-KEY');
-        // dd($token);
-        
-	if ($token != $this->key_api) {
-            return response()->json(['code' => 401, 'message' => 'Unauthorized'], 401);
-        }
-
+        // dd($instance_id);
+        $class_tech_name = 'formation' ;
         $company = null;
-            // $lang = null;
+            $lang = null;
             if ($company_uid != null) {
                 # code...
                 $company = Company::where(['uid' => $company_uid])->first();
             }
-            
+            if ($lang_iso != null) {
+                # code...
+                $lang = Lang::where(['iso' => $lang_iso])->first();
+            }
             $class = null;
             if($class_tech_name != null) {
                 $class = Classe::where(['tech_name' => $class_tech_name, 'company_id' => $company->id])->first();
@@ -261,14 +356,14 @@ class InfusioController extends Controller
             // dd($instance->datas()->get());
             $data = $request->json()->all()['data'];
             if ($class_tech_name =='formation') {
-                //On va dater la creation de la formation 
+                //On va dater la creation de la formation
                 try {
                     //code...
                     $data['date_modification'] = date('d/m/Y H:i:s');
                 } catch (\Throwable $th) {
                     //throw $th;
                 }
-                
+
             }
             foreach ($data as $key => $value) {
                 $attribute = Attribute::where(['tech_name' => $key, 'classe_id' => $class->id])->first();
@@ -279,12 +374,6 @@ class InfusioController extends Controller
 
     public function delete(Request $request, $company_uid , $lang_iso , $class_tech_name , $instance_id = null)
     {
-        $token = $request->header('API-KEY');
-        // dd($token);
-        
-	if ($token != $this->key_api) {
-            return response()->json(['code' => 401, 'message' => 'Unauthorized'], 401);
-        }
         try {
             //code...
             $company = null;
@@ -328,6 +417,8 @@ class InfusioController extends Controller
         }
     }
 
+
+
     public function postSondage(Request $request, $company_uid = null, $lang_iso = null, $class_tech_name = null, $instance_id = null)
     {
         try {
@@ -338,7 +429,7 @@ class InfusioController extends Controller
                 # code...
                 $company = Company::where(['uid' => $company_uid])->first();
             }
-            
+
             if ($lang_iso != null) {
                 # code...
                 $lang = Lang::where(['iso' => $lang_iso])->first();
@@ -374,9 +465,9 @@ class InfusioController extends Controller
     }
 
 
-    public function getSondage(Request $request, $company_uid ,$lang_iso, $class_tech_name ,   $instance_id = null)
-    {   
-        $page = $request->input('page');
+    public function getSondage(Request $request, $company_uid ,$lang_iso, $class_tech_name ,   $instance_id=null)
+    {  
+        // dd('class',($class_tech_name)); 
         if (count(explode('/',($class_tech_name))) == 1) {
             # code...
             $instance_id = null;
@@ -384,7 +475,7 @@ class InfusioController extends Controller
             $instance_id = explode('/',($class_tech_name))[1];
             $class_tech_name = explode('/',($class_tech_name))[0];
         }
-        
+
         $company = null;
         $lang = null;
         if ($company_uid != null) {
@@ -396,6 +487,7 @@ class InfusioController extends Controller
             # code...
             $lang = Lang::where(['iso' => $lang_iso])->first();
         }
+
         if($class_tech_name != null) {
             $class = Classe::where(['tech_name' => $class_tech_name, 'company_id' => $company->id])->first();
             if ($class == null) {
@@ -405,18 +497,20 @@ class InfusioController extends Controller
             if ($instance_id == "0") {
                 $form_empty = true;
             }
+            
             //on les charge dans le tableau infusioJson
-            // dd($form_empty, $instance_id,$lang->id);
+
             $me = $class->me($lang->id,$instance_id, $form_empty);
             $infusioJson = [
                 'class' => $me['class'],
+                // 'groupe_attributes' => $me['attributes'],$classe->getmyAttributeGroups($lang_id,null);
+
                 'groupe_attributes' => $class->getmyAttributeGroups($lang->id,null),
                 'instances' =>$class->getmyInstances($lang->id,$instance_id,$form_empty, $class->tech_name),
             ];
             return response()->json($infusioJson,Response::HTTP_OK);
-            // return response()->json(['code' => 200, 'message' => 'Succès' ], Response::HTTP_OK);
+
         }
-        // $component = Infusio::renderComponent('com.webtinix.infusio.server.DataTable');
     }
 
     public function convertJSONArrays($array)
@@ -458,51 +552,60 @@ class InfusioController extends Controller
     //     $minute = $maintenant->format('i'); // Minute (de 0 à 59)
     //     $seconde = $maintenant->format('s'); // Seconde (de 0 à 59)
     //     return $annee.$mois.$jour.$heure.$minute.$seconde;
-    // } 
-
-
-    // public function getInscription(Request $request, $company_uid ,$lang_iso, $class_tech_name ,   $instance_id = null)
-    // {   
-    //     $page = $request->input('page');
-    //     if (count(explode('/',($class_tech_name))) == 1) {
-    //         # code...
-    //         $instance_id = null;
-    //     }else {
-    //         $instance_id = explode('/',($class_tech_name))[1];
-    //         $class_tech_name = explode('/',($class_tech_name))[0];
-    //     }
-        
-    //     $company = null;
-    //     $lang = null;
-    //     if ($company_uid != null) {
-    //         # code...
-    //         $company = Company::where(['uid' => $company_uid])->first();
-    //     }
-
-    //     if ($lang_iso != null) {
-    //         # code...
-    //         $lang = Lang::where(['iso' => $lang_iso])->first();
-    //     }
-    //     if($class_tech_name != null) {
-    //         $class = Classe::where(['tech_name' => $class_tech_name, 'company_id' => $company->id])->first();
-    //         if ($class == null) {
-    //             return response()->json(['code' => 404, 'message' => 'La classe '.$class_tech_name.' n\'existe pas' ],Response::HTTP_NOT_FOUND);
-    //         }
-    //         $form_empty = false;
-    //         if ($instance_id == "0") {
-    //             $form_empty = true;
-    //         }
-    //         //on les charge dans le tableau infusioJson
-    //         // dd($form_empty, $instance_id,$lang->id);
-    //         $me = $class->me($lang->id,$instance_id, $form_empty);
-    //         $infusioJson = [
-    //             'class' => $me['class'],
-    //             'groupe_attributes' => $class->getmyAttributeGroups($lang->id,null),
-    //             'instances' =>$class->getmyInstances($lang->id,$instance_id,$form_empty, $class->tech_name),
-    //         ];
-    //         return response()->json($infusioJson,Response::HTTP_OK);
-    //         // return response()->json(['code' => 200, 'message' => 'Succès' ], Response::HTTP_OK);
-    //     }
-    //     // $component = Infusio::renderComponent('com.webtinix.infusio.server.DataTable');
     // }
+
+    function putNbEtudiant(Request $request, $company_uid, $lang_iso, $instance_id,$nbetudiant) {
+
+        if (empty(auth()->user()) || auth()->user()->role != "formateur") {
+            # code...
+            return response()->json(['code' => 401, 'message' => 'Vous devez vous connecter en tant que formateur' ],Response::HTTP_UNAUTHORIZED);
+        }
+
+        $data_nombre_etudiant = Data::where([
+            'instance_id' => $instance_id,
+            'attribute_id' => Attribute::where(['tech_name' => 'nombre_etudiant'])->first()->id
+        ])->first();
+        if ($data_nombre_etudiant->value == null || $data_nombre_etudiant->value == 0 || $data_nombre_etudiant->value == "") {
+            # code...
+            $data_nombre_etudiant = new Data();
+            $data_nombre_etudiant->instance_id = $instance_id;
+            $data_nombre_etudiant->attribute_id =  Attribute::where(['tech_name' => 'nombre_etudiant'])->first()->id;
+            $data_nombre_etudiant->value = $nbetudiant;
+            $data_nombre_etudiant->save();
+        }else {
+            $data_nombre_etudiant->update(['value' => $nbetudiant]);
+        }
+
+
+        $data_auto_generate_formateur_id = Data::where([
+            'instance_id' => $instance_id,
+            'attribute_id' => Attribute::where(['tech_name' => 'auto_generate_formateur_id'])->first()->id
+        ])->first();
+
+        $data_auto_generate_formateur = Data::where([
+            'instance_id' => $instance_id,
+            'attribute_id' => Attribute::where(['tech_name' => 'auto_generate_formateur'])->first()->id
+        ])->first();
+        // dd($data_auto_generate_formateur_id,$data_auto_generate_formateur);
+        if ($data_auto_generate_formateur_id->value == null || $data_auto_generate_formateur_id->value == 0 || $data_auto_generate_formateur_id->value == "") {
+            # code...
+            $data_auto_generate_formateur_id = new Data();
+            $data_auto_generate_formateur_id->instance_id = $instance_id;
+            $data_auto_generate_formateur_id->attribute_id =  Attribute::where(['tech_name' => 'auto_generate_formateur_id'])->first()->id;
+            $data_auto_generate_formateur_id->value = auth()->user()->id;
+            $data_auto_generate_formateur_id->save();
+
+            $data_auto_generate_formateur = new Data();
+            $data_auto_generate_formateur->instance_id = $instance_id;
+            $data_auto_generate_formateur->attribute_id =  Attribute::where(['tech_name' => 'auto_generate_formateur'])->first()->id;
+            $data_auto_generate_formateur->value = auth()->user()->prenom.' '.auth()->user()->nom;
+
+            $data_auto_generate_formateur->save();
+        }else {
+            $data_auto_generate_formateur_id->update(['value' => auth()->user()->id]);
+            $data_auto_generate_formateur->update(['value' => auth()->user()->prenom.' '.auth()->user()->nom ]);
+        }
+        return response()->json(['code' => 200, 'message' => 'Nombre d\'etudiants mis à jour' ],Response::HTTP_OK);
+
+    }
 }
