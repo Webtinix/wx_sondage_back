@@ -377,7 +377,11 @@ class AttributeController extends Controller
                     }
                     foreach ($instance_delete as $key => $value) {
                         # code...
-                        $value->delete();
+                        $data_for_instance = Data::where(['instance_id' => $value->id]);
+                        if (is_array($data_for_instance) && count($data_for_instance) > 0) {
+                            # code...
+                            $value->delete();
+                        }
                     }
                     
                 }
