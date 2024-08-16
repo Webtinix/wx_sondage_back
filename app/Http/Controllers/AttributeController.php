@@ -353,7 +353,6 @@ class AttributeController extends Controller
                             // dd($dt);
                             // Si on nous demande de supprimer l'instance
                             if (isset($val['deleted']) && !empty($val['deleted']) && $val['deleted'] == 1) {
-                                
                                     if ($dt != null) {
                                         # code...
                                         $dt->delete();
