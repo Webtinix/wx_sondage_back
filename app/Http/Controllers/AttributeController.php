@@ -305,7 +305,11 @@ class AttributeController extends Controller
                                 'lib' => $data['lib'],
                                 ]);
                             $clnew = true;
+                        }else {
+                            # code...
+
                         }
+                        
                     }
                     //create du groupe de l'attribut
                     
@@ -321,7 +325,6 @@ class AttributeController extends Controller
                             $instance = Instance::create([
                                 'classe_id' => $class_sub->id,
                             ]);
-
                         }
                         
                         foreach ($value as $key => $val) {
@@ -354,9 +357,9 @@ class AttributeController extends Controller
                                     if ($dt != null) {
                                         # code...
                                         $dt->delete();
-                                    }
-                                    $instance_delete [] = $instance;
-                                
+                                        $ins = Instance::where(['id' => $val['id']])->first();
+                                        $ins->delete();
+                                    }                                
                             }else{
                                 if ($dt == null) {
                                     $value_sub = Data::create([
@@ -375,14 +378,7 @@ class AttributeController extends Controller
                         }
                         // die();
                     }
-                    foreach ($instance_delete as $key => $value) {
-                        # code...
-                        $data_for_instance = Data::where(['instance_id' => $value->id]);
-                        if (is_array($data_for_instance) && count($data_for_instance) > 0) {
-                            # code...
-                            $value->delete();
-                        }
-                    }
+                    
                     
                 }
             // Retourner une réponse JSON avec un message de succès
