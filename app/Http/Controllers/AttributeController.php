@@ -375,7 +375,10 @@ class AttributeController extends Controller
                         }
                         // die();
                     }
-                    // dd( $instance_delete);
+                    foreach ($instance_delete as $key => $value) {
+                        # code...
+                        $value->delete();
+                    }
                     
                 }
             // Retourner une réponse JSON avec un message de succès
