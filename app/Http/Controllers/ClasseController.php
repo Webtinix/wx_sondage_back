@@ -17,7 +17,7 @@ class ClasseController extends Controller
      */
     public function get(string $tech_name = null, string $groups = null, string $group_attribute = null, string $attribute = null,  $attribute_id = null)
     {
-        // try {
+        try {
             // Récupérer la classe spécifiée par son ID
             $components = Component::all();
             if ($tech_name != null) {
@@ -89,10 +89,10 @@ class ClasseController extends Controller
             $classes = Classe::all();
             // Retourner une réponse JSON avec les classes récupérées
             return response()->json(['classes' => $classes], Response::HTTP_OK);
-        // } catch (\Exception $e) {
-        //     // En cas d'erreur, retourner une réponse avec un message d'erreur
-        //     return response()->json(['error' => 'Une erreur est survenue lors de la récupération des classes.'], 500);
-        // }
+        } catch (\Exception $e) {
+            // En cas d'erreur, retourner une réponse avec un message d'erreur
+            return response()->json(['error' => 'Une erreur est survenue lors de la récupération des classes.'], 500);
+        }
     }
 
     /**
@@ -100,7 +100,7 @@ class ClasseController extends Controller
      */
     public function post(Request $request)
     {
-        // try {
+        try {
             // Valider les données JSON de la requête
             $validator = Validator::make($request->json()->all(), [
                 'lib' => 'required|string',
@@ -125,12 +125,12 @@ class ClasseController extends Controller
                 'message' => 'Classe crée avec succès',
                 'classe' => $classe
             ], Response::HTTP_OK);
-        // } catch (\Exception $e) {
-        //     // En cas d'erreur, retourner une réponse avec un message d'erreur
-        //     return response()->json([
-        //         'code' => 404,
-        //         'message' => 'Une erreur est survenue lors de la création de la classe.'],Response::HTTP_NOT_FOUND);
-        // }
+        } catch (\Exception $e) {
+            // En cas d'erreur, retourner une réponse avec un message d'erreur
+            return response()->json([
+                'code' => 404,
+                'message' => 'Une erreur est survenue lors de la création de la classe.'],Response::HTTP_NOT_FOUND);
+        }
     }
 
 

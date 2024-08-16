@@ -9,6 +9,7 @@ use App\Models\Instance;
 use App\Models\Attribute;
 use Illuminate\Http\Request;
 use App\Models\AttributeLang;
+use App\Models\Company;
 use App\Models\Component;
 use Illuminate\Http\Response;
 use App\Models\GroupeAttribute;
@@ -67,7 +68,7 @@ class AttributeController extends Controller
                 'component_id_multi' => 'nullable|integer',
                 'component_id_unique' => 'nullable|integer',
             ]);
-            // dd($request->json()->all()['instance_src']);
+
             // Vérifier si la validation a échoué
             if ($validator->fails()) {
                 return response()->json(['error' => $validator->errors()], 400);
@@ -106,6 +107,8 @@ class AttributeController extends Controller
             }
 
             // Créer une nouvelle instance de l'attribut
+            $attribute = Attribute::where(['tech_name' => $request->json()->all()['tech_name']])->first();
+                # code...
             $attribute = Attribute::create($data_att);
             if (empty($request->json()->all()['is_lang']) or $request->json()->all()['is_lang'] == true) {
                 # code...
@@ -113,12 +116,13 @@ class AttributeController extends Controller
                     # code...
                 $attributelang = AttributeLang::create(['attribute_id' => $attribute->id, 'lang_id' => $lang->id, 'lib' => $request->json()->all()['lib']]);
             }
+            
             $class_sub = null;
-            // dd($request->json()->all()['instance_src']);
             //on verifie si la clé  instance_src existe dans le json de la requête
             if (!empty($request->json()->all()['instance_src']) && $request->json()->all()['instance_src'] != "") {
                 //on recupere l'id de la classe
                 $data = json_decode($request->json()->all()['instance_src'],true);
+                
                 if (!empty($data['tech_name_class'])) {
                     $class_sub = Classe::where(['tech_name' =>  $data['tech_name_class']])->first();
                     if (empty($class_sub)) {
@@ -126,7 +130,7 @@ class AttributeController extends Controller
                         $class_sub = Classe::create([
                             'tech_name' =>  $data['tech_name_class'],
                             'lib' =>  $data['lib'], 
-                            'company_id' => 1,
+                            'company_id' => Company::all()->first()->id,
                             'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
                             'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
                         ]);
@@ -144,7 +148,6 @@ class AttributeController extends Controller
                     'lib' => $data['lib'],
                     ]);
 
-                // dd($data['values']);
                 foreach ($data['values'] as $key_ => $value) {
                     $instance = Instance::create([
                         'classe_id' => $class_sub->id,
@@ -288,7 +291,7 @@ class AttributeController extends Controller
                             $class_sub = Classe::create([
                                 'tech_name' =>  $data['tech_name_class'],
                                 'lib' =>  $data['lib'], 
-                                'company_id' => 1,
+                                'company_id' => Company::all()->first()->id,
                                 'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
                                 'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
                             ]);
