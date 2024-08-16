@@ -43,7 +43,7 @@ class AttributeController extends Controller
      */
     public function post(Request $request)
     {
-        // try {
+        try {
             // Valider les données JSON de la requête
             $validator = Validator::make($request->json()->all(), [
                 'lib' => 'required|string',
@@ -114,6 +114,7 @@ class AttributeController extends Controller
                 $attributelang = AttributeLang::create(['attribute_id' => $attribute->id, 'lang_id' => $lang->id, 'lib' => $request->json()->all()['lib']]);
             }
             $class_sub = null;
+            // dd($request->json()->all()['instance_src']);
             //on verifie si la clé  instance_src existe dans le json de la requête
             if (!empty($request->json()->all()['instance_src']) && $request->json()->all()['instance_src'] != "") {
                 //on recupere l'id de la classe
@@ -198,10 +199,10 @@ class AttributeController extends Controller
             }
             // Retourner une réponse JSON avec l'attribut créé
             return response()->json(['message' => 'Attribut créé avec succès.', 'code' => '200' ], Response::HTTP_OK);
-        // } catch (\Exception $e) {
-        //     // En cas d'erreur, retourner une réponse avec un message d'erreur
-        //     return response()->json(['error' => 'Une erreur est survenue lors de la création de l\'attribut.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        // }
+        } catch (\Exception $e) {
+            // En cas d'erreur, retourner une réponse avec un message d'erreur
+            return response()->json(['error' => 'Une erreur est survenue lors de la création de l\'attribut.', 'message' => $e], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
