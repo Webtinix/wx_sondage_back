@@ -328,6 +328,7 @@ class AttributeController extends Controller
                                         $at = Attribute::where(['tech_name'=>$key])->first();
                                         if (!empty($at)) {
                                             # code...
+                                            
                                             $dat = Data::where(['attribute_id'=> $at->id])->get();
                                             $ins = [];
                                             //suppression des instances liées aux $dat
@@ -350,7 +351,8 @@ class AttributeController extends Controller
                             }
                         }
                     }
-
+                    // dd($data_n);
+                    $class_sub = '';
                     if (!empty($data_n['tech_name_class'])) {
                         $class_sub = Classe::where(['tech_name' =>  $data_n['tech_name_class']])->first();
                         if (empty($class_sub)) {
@@ -363,8 +365,10 @@ class AttributeController extends Controller
                                 'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
                             ]);
                         }
+                        
                     }
                     $attribute->classe_src_id =  $class_sub->id;
+                    // dd($attribute);
                     $attribute->save();
                     //create du groupe de l'attribut
                     $gac = Component::where(['lib' => 'com.webtinix.infusio.GroupeAttributes'])->first();
