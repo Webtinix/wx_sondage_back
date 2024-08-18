@@ -53,12 +53,12 @@ Route::controller(AppController::class)->group(function () {
 
 //recuperation du nombre total des reponses d'un sondage
 
-Route::get('/{company}/{lang}/{class}/sondage/nombre_total_reponses', [InfusioController::class, 'get_nombre_total_reponses'])->where('class', 'sondage-.+');
+    Route::get('/{company}/{lang}/{class}/sondage/nombre_total_reponses', [InfusioController::class, 'get_nombre_total_reponses'])->where('class', 'sondage-.+');
 
-Route::get('/{company}/{lang}/{class}/0', [InfusioController::class, 'get'])->where('class', 'sondage-.+');
-Route::get('/{company}/{lang}/{class}/total_sondage', [InfusioController::class, 'getTotalSondage'])->where('class', 'sondage-.+');
-Route::get('/{company?}/{lang?}/{class?}/{instance_id?}', [InfusioController::class, 'getsondage'])->where(['class' => 'sondage-.+','instance_id' => '[1-9][0-9]*']);
-Route::post('/{company?}/{lang?}/{class}/{instance_id?}', [InfusioController::class, 'postSondage'])->where('class', 'sondage-.+');
+    Route::get('/{company}/{lang}/{class}/0', [InfusioController::class, 'get'])->where('class', 'sondage-.+');
+    Route::get('/{company}/{lang}/{class}/total_sondage', [InfusioController::class, 'getTotalSondage'])->where('class', 'sondage-.+');
+    Route::get('/{company?}/{lang?}/{class?}/{instance_id?}', [InfusioController::class, 'getsondage'])->where(['class' => 'sondage-.+','instance_id' => '[1-9][0-9]*']);
+    Route::post('/{company?}/{lang?}/{class}/{instance_id?}', [InfusioController::class, 'postSondage'])->where('class', 'sondage-.+');
 
     Route::get('infusio/infusioadmin/classes/{tech_name?}/{groups?}/{group_attribute?}/{attribute?}/{attribute_id?}', [ClasseController::class, 'get']);
     Route::delete('infusio/infusioadmin/classes/{id}', [ClasseController::class, 'delete']);

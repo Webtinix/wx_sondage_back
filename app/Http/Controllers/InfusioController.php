@@ -35,15 +35,17 @@ class InfusioController extends Controller
         $this->user = $user;
     }
 
-    public function get(Request $request, $company_uid, $lang_iso , $class_tech_name, $instance_id = "0")
+    public function get(Request $request, $company_uid, $lang_iso , $class_tech_name)
     {
+        $instance_id = "0";
         $company = null;
         $lang = null;
         if ($company_uid != null) {
             # code...
+            $companies = Company::all();
             $company = Company::where(['uid' => $company_uid])->first();
         }
-
+        
         if ($lang_iso != null) {
             # code...
             $lang = Lang::where(['iso' => $lang_iso])->first();
@@ -54,7 +56,16 @@ class InfusioController extends Controller
                 # code...
                 return response()->json(['code' => 404, 'message' => 'La classe '.$class_tech_name.' n\'existe pas' ],Response::HTTP_NOT_FOUND);
             }
+            
             $me = $class->me($lang->id);
+            try {
+                //code...
+                $ins_ = Instance::where(['id' => explode('-', $class_tech_name)[1]])->first();
+                $data_ = Data::where(['instance_id' => $ins_->id,'attribute_id' => Attribute::where(['classe_id' => $ins_->classe_id,'tech_name'=>'description'])->first()->id ])->first();
+                $me['class']['description'] = $data_->value;
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
             $infusioJson = [
                 'class' => $me['class'],
                 'groupe_attributes' => $class->getmyAttributeGroups($lang->id,null,true),
@@ -180,8 +191,7 @@ class InfusioController extends Controller
                     if(!empty($attribute)) {
                         $attribute->managerAttributeSimpleData((!empty($value) ? $value : "Aucune réponse"), $instance->id);
                     }
-    
-                    if (trim($key) == 'lib' && $class_tech_name =='formation') {
+                    if (trim($key) == 'description' && $class_tech_name =='formation') {
                         $lib_formation = $value;
                     }
                     
@@ -208,6 +218,7 @@ class InfusioController extends Controller
                     'lib' => $lib_formation, 
                     'tech_name' => 'sondage-'.$instance->id, 
                     'company_id' => $company->id,
+                    // 'description'
                     'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.SondageResult'])->first()->id,
                     'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
                 ]);
@@ -504,7 +515,6 @@ class InfusioController extends Controller
             $infusioJson = [
                 'class' => $me['class'],
                 // 'groupe_attributes' => $me['attributes'],$classe->getmyAttributeGroups($lang_id,null);
-
                 'groupe_attributes' => $class->getmyAttributeGroups($lang->id,null),
                 'instances' =>$class->getmyInstances($lang->id,$instance_id,$form_empty, $class->tech_name),
             ];

@@ -385,13 +385,10 @@ class AttributeController extends Controller
                             'classe_id' => $class_sub->id,
                         ]);
                         foreach ($value as $key => $val) {
-                            
                             if ($key == 'id') {
                                 continue;
                             }
-                            
                             $attribute_sub = Attribute::where(['tech_name' => $key, 'classe_id' => $class_sub->id])->first();
-    
                         ///-----creation de l'instance-----
                             if ($attribute_sub == null) {
                                 # code...
