@@ -23,7 +23,7 @@ class AttributeController extends Controller
      */
     public function get($id = null)
     {
-        // try {
+        try {
             if ($id) {
                 # code...
                 $attribute = Attribute::findOrFail($id);
@@ -34,10 +34,10 @@ class AttributeController extends Controller
             
             // Retourner une réponse JSON avec les attributs récupérés
             return response()->json(['attributes' => $attributes]);
-        // } catch (\Exception $e) {
-        //     // En cas d'erreur, retourner une réponse avec un message d'erreur
-        //     return response()->json(['error' => 'Une erreur est survenue lors de la récupération des attributs.'], 500);
-        // }
+        } catch (\Exception $e) {
+            // En cas d'erreur, retourner une réponse avec un message d'erreur
+            return response()->json(['error' => 'Une erreur est survenue lors de la récupération des attributs.'], 500);
+        }
     }
 
     /**
@@ -209,33 +209,6 @@ class AttributeController extends Controller
         }
     }
 
-    // public function cleanInstanceSrc($data)
-    // {
-    //     // Décoder le JSON pour obtenir un tableau associatif PHP
-    //     // $data = json_decode($jsonData, true);
-
-    //     // Vérifier si 'instance_src' et 'values' existent
-    //     if (isset($data['instance_src'])) {
-    //         $instanceSrc = $data['instance_src'];
-
-    //         if (isset($instanceSrc['values'])) {
-    //             // Filtrer le tableau 'values' pour retirer les éléments à supprimer
-    //             $filteredValues = array_filter($instanceSrc['values'], function ($value) {
-    //                 return !isset($value['attribute_1_class_src_question_Profession_2024816215027_sondage961_2024816215027']['deleted']) 
-    //                        || $value['attribute_1_class_src_question_Profession_2024816215027_sondage961_2024816215027']['deleted'] !== '1';
-    //             });
-
-    //             // Mettre à jour le tableau 'values' avec les valeurs filtrées
-    //             $instanceSrc['values'] = array_values($filteredValues);
-
-    //             // Mettre à jour 'instance_src' dans le tableau original
-    //             $data['instance_src'] = $instanceSrc;
-    //         }
-    //     }
-
-    //     // Retourner le tableau mis à jour
-    //     return $data;
-    // }
 
     /**
      * Update the specified resource in storage.
@@ -243,7 +216,7 @@ class AttributeController extends Controller
 
     public function put(Request $request, string $id)
     {
-        // try {
+        try {
             // Valider les données JSON de la requête
             $validator = Validator::make($request->json()->all(), $this->validationRules());
             if ($validator->fails()) {
@@ -265,37 +238,15 @@ class AttributeController extends Controller
 
             // Gérer les instances si `instance_src` est présent
             if (!empty($data['instance_src'])) {
-                // dd(json_decode($data['instance_src'], true)['tech_name_class']);
-                // dd(Classe::where(['tech_name' => $data['instance_src']['tech_name_class']])->first());
-                $c = Classe::where(['tech_name' => json_decode($data['instance_src'], true)['tech_name_class']])->first();
-                //supprime les groupes,les attributs,les instances et les valeurs si ils existent
-                // $c->groupeAttributes();
-                $c->groupeAttributes()->each(function($groupeAttribute) {
-                    // Supprimer les attributs associés
-                    $groupeAttribute->attributes()->each(function($attribute) {
-                        // Supprimer les données associées
-                        $attribute->datas()->each(function($data) {
-                            $data->delete();
-                        });
-                        $attribute->delete();
-                    });
-                    $groupeAttribute->delete();
-                });
-                
-                // Supprimer les instances associées
-                $c->instances()->each(function($instance) {
-                    $instance->delete();
-                });
-                
                 $this->handleInstanceSrc($data['instance_src'], $attribute);
             }
 
             // Retourner une réponse JSON avec un message de succès
             return response()->json(['code' => 200, 'message' => 'Attribut mis à jour avec succès.'], Response::HTTP_OK);
-        // } catch (\Exception $e) {
-        //     // En cas d'erreur, retourner une réponse avec un message d'erreur
-        //     return response()->json(['code' => 404, 'message' => 'Une erreur est survenue lors de la mise à jour de l\'attribut.'], Response::HTTP_NOT_FOUND);
-        // }
+        } catch (\Exception $e) {
+            // En cas d'erreur, retourner une réponse avec un message d'erreur
+            return response()->json(['code' => 404, 'message' => 'Une erreur est survenue lors de la mise à jour de l\'attribut.'], Response::HTTP_NOT_FOUND);
+        }
     }
 
     private function validationRules()
@@ -356,22 +307,29 @@ class AttributeController extends Controller
             foreach ($value as $key => $val) {
                 if ($key == 'id') continue;
                 if (!empty($val['deleted']) && $val['deleted'] == 1) {
-                    $this->deleteAttributeAndInstances($key);
+                    $this->deleteAttributeAndInstances($key, $value['id']);
                     unset($data['values'][$key_]);
                 }
             }
         }
     }
 
-    private function deleteAttributeAndInstances($techName)
+    private function deleteAttributeAndInstances($techName, $id_instance_delete = null)
     {
         $attribute = Attribute::where('tech_name', $techName)->first();
-        // dd($attribute);
         if ($attribute) {
-            $instances = $attribute->datas()->pluck('instance_id');
-            $attribute->datas()->delete();
-            $attribute->delete();
-            Instance::destroy($instances);
+            $groupeAttribute = $attribute->groupeAttribute;
+            $groupeAttribute->attributes()->each(function($attribute) {
+                // Supprimer les données associées
+                $attribute->datas()->each(function($data) {
+                    $data->delete();
+                });
+                $attribute->delete();
+            });
+            $groupeAttribute->delete();
+            if ($id_instance_delete) {
+                $i = Instance::where('id', $id_instance_delete)->first()->delete();
+            }
         }
     }
 
@@ -450,192 +408,6 @@ class AttributeController extends Controller
         }
     }
 
-    // public function put(Request $request, string $id)
-    // {
-    //     // try {
-    //         // Valider les données JSON de la requête
-    //         $validator = Validator::make($request->json()->all(), [
-    //             'tech_name' => 'required|string',
-    //             'position' => 'required|integer',
-    //             'attr' => 'nullable|string',
-    //             'attr_label' => 'nullable|string',
-    //             'render_in' => 'nullable|string',
-    //             'module_in' => 'nullable|string',
-    //             'render_out' => 'nullable|string',
-    //             'module_out' => 'nullable|string',
-    //             'is_lang' => 'nullable|boolean',
-    //             'actif' => 'nullable|boolean',
-    //             'visible' => 'nullable|boolean',
-    //             'list_visible' => 'nullable|boolean',
-    //             'disabled' => 'nullable|boolean',
-    //             'classe_id' => 'nullable|integer',
-    //             'groupe_attribute_id' => 'nullable|integer',
-    //             'classe_src_id' => 'nullable|integer',
-    //             'component_id' => 'nullable|string',
-    //             'component_id_multi' => 'nullable|string',
-    //             'component_id_unique' => 'nullable|string',
-    //         ]);
-    //         // Vérifier si la validation a échoué
-    //         if ($validator->fails()) {
-    //             return response()->json(['error' => $validator->errors()], Response::HTTP_UNPROCESSABLE_ENTITY);
-    //         }
-    //         $data_att = $request->json()->all();
-    //         if (empty($request->json()->all()['class_id'])) {
-    //             # code...
-    //             $class = GroupeAttribute::findOrFail($request->json()->all()['groupe_attribute_id']);
-    //             // dd($class->classe_id);
-    //             $data_att['class_id'] = $class->classe_id;
-    //         }
-    //         if (empty($request->json()->all()['component_id_multi'])) {
-    //             $data_att['component_id_multi'] = 1;
-    //         }else {
-    //             # code...
-    //             $data_att['component_id_multi'] = Component::where(['lib' => $request->json()->all()['component_id_multi']])->first()->id;
-    //         }
-    //         if (empty($request->json()->all()['component_id_unique'])) {
-    //             # code...
-    //             $data_att['component_id_unique'] = 3;
-    //         }else {
-    //             # code...
-    //             $data_att['component_id_unique'] = Component::where(['lib' => $request->json()->all()['component_id_unique']])->first()->id;
-    //         }
-    //         if (empty($request->json()->all()['component_id'])) {
-    //             # code...
-    //             $data_att['component_id'] = 4;
-    //         }else {
-    //             # code...
-    //             $data_att['component_id'] = Component::where(['lib' => $request->json()->all()['component_id']])->first()->id;
-    //         }
-    //         // Récupérer l'attribut spécifié par son ID
-    //         $attribute = Attribute::findOrFail($id);
-    //          // Mettre à jour les attributs de l'attribut avec les nouvelles données JSON
-    //         $attribute->update($data_att);
-    //         $gac = Component::where(['lib' => 'com.webtinix.infusio.GroupeAttributes'])->first();
-    //             //on verifie si la clé  instance_src existe dans le json de la requête
-    //             if (!empty($request->json()->all()['instance_src']) && $request->json()->all()['instance_src'] != "") {
-
-    //                 $data = json_decode($request->json()->all()['instance_src'],true);
-    //                 $data_n = $data;
-    //                 //create du groupe de l'attribut
-    //                 foreach ($data['values'] as $key_ => $value) {
-                        
-    //                     foreach ($value as $key => $val) {
-                            
-    //                         if ($key == 'id') {
-    //                             continue;
-    //                         }else{
-    //                             if (key_exists('deleted', $value[$key])) {
-    //                                 # code...
-    //                                 if ($value[$key]['deleted']==1) {
-    //                                     # code...
-    //                                     $at = Attribute::where(['tech_name'=>$key])->first();
-    //                                     if (!empty($at)) {
-    //                                         # code...
-                                            
-    //                                         $dat = Data::where(['attribute_id'=> $at->id])->get();
-    //                                         $ins = [];
-    //                                         //suppression des instances liées aux $dat
-    //                                         foreach ($dat as $key => $value) {
-    //                                             # code...
-    //                                             $ins [] = $value->instance();
-    //                                             $value->delete();
-    //                                         }
-    //                                         $at->delete();
-    //                                         foreach ($ins as $key => $val_ins) {
-    //                                             # code...
-    //                                             $val_ins->delete();
-    //                                         }
-    //                                     }
-    //                                     //suppréssion de value dans le tableau $data_n
-    //                                     unset($data_n['values'][$key_]);
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //                 // dd($data_n);
-    //                 $class_sub = '';
-    //                 if (!empty($data_n['tech_name_class'])) {
-    //                     $class_sub = Classe::where(['tech_name' =>  $data_n['tech_name_class']])->first();
-    //                     if (empty($class_sub)) {
-    //                         # code...
-    //                         $class_sub = Classe::create([
-    //                             'tech_name' =>  $data_n['tech_name_class'],
-    //                             'lib' =>  $data_n['lib'], 
-    //                             'company_id' => Company::all()->first()->id,
-    //                             'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
-    //                             'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
-    //                         ]);
-    //                     }
-                        
-    //                 }
-    //                 $attribute->classe_src_id =  $class_sub->id;
-    //                 $attribute->save();
-    //                 //create du groupe de l'attribut
-    //                 $gac = Component::where(['lib' => 'com.webtinix.infusio.GroupeAttributes'])->first();
-    //                 $groupeAttribute = GroupeAttribute::create([
-    //                     'classe_id' => $class_sub->id,
-    //                     'position' => 1,
-    //                     'component_id_multi' => $gac->id,
-    //                     'component_id_unique' => $gac->id,
-    //                     'lib' => $data_n['lib'],
-    //                     ]);
-    //                 foreach ($data_n['values'] as $key_ => $value) {
-    //                     $instance = Instance::create([
-    //                         'classe_id' => $class_sub->id,
-    //                     ]);
-    //                     foreach ($value as $key => $val) {
-    //                         if ($key == 'id') {
-    //                             continue;
-    //                         }
-    //                         $attribute_sub = Attribute::where(['tech_name' => $key, 'classe_id' => $class_sub->id])->first();
-    //                     ///-----creation de l'instance-----
-    //                         if ($attribute_sub == null) {
-    //                             # code...
-    //                             $attribute_sub = Attribute::create([
-    //                                 'lib' => $val['lib'],
-    //                                 'tech_name' => $key,
-    //                                 'classe_id' => $class_sub->id,
-    //                                 'groupe_attribute_id' => $groupeAttribute->id,
-    //                                 'position' => 1,
-    //                                 'component_id' =>  Component::where(['lib' => 'com.webtinix.infusio.server.InputText'])->first()->id,
-    //                                 'component_id_multi' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
-    //                                 'component_id_unique' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
-    //                             ]);
-    //                         }
-    //                     //-----creation du data----------
-    //                     if (is_array($val['value'])) {
-    //                         # code...
-    //                         foreach ($val['value'] as $k => $v) {
-    //                             # code...
-    //                             $value_sub = Data::create([
-    //                                 'attribute_id' => $attribute_sub->id,
-    //                                 'class_id' => $class_sub->id,
-    //                                 'value' => $v,
-    //                                 'instance_id' => $instance->id,
-    //                             ]);
-    //                         } 
-    //                     }else {
-    //                         # code...
-    //                         $value_sub = Data::create([
-    //                             'attribute_id' => $attribute_sub->id,
-    //                             'class_id' => $class_sub->id,
-    //                             'value' => $val['value'],
-    //                             'instance_id' => $instance->id,
-    //                         ]);
-    //                     }
-                            
-    //                     }
-    //                 }
-                    
-    //             }
-    //         // Retourner une réponse JSON avec un message de succès
-    //             return response()->json(['code' => 200, 'message' => 'Attribut mis à jour avec succès.'], Response::HTTP_OK);
-    //     // } catch (\Exception $e) {
-    //     //     // En cas d'erreur, retourner une réponse avec un message d'erreur
-    //     //     return response()->json(['code' => 404, 'message' => 'Une erreur est survenue lors de la mise à jour de l\'attribut.'], Response::HTTP_NOT_FOUND);
-    //     // }
-    // }
 
     /**
      * Remove the specified resource from storage.

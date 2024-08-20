@@ -249,92 +249,6 @@ class InfusioController extends Controller
             //throw $th;
             return response()->json(['code' => 404, 'message' => $th->getMessage()], Response::HTTP_NOT_FOUND);
         }
-        // try {
-        //     // dd($company_uid, $lang_iso, $class_tech_name);
-        //     $company = null;
-        //     $lang = null;
-        //     if ($company_uid != null) {
-        //         # code...
-        //         $company = Company::where(['uid' => $company_uid])->first();
-        //     }
-        //     if ($lang_iso != null) {
-        //         # code...
-        //         $lang = Lang::where(['iso' => $lang_iso])->first();
-        //     }
-        //     $class = null;
-        //     if($class_tech_name != null) {
-        //         $class = Classe::where(['tech_name' => $class_tech_name, 'company_id' => $company->id])->first();
-        //     }
-        //     if ($class == null) {
-        //         # code...
-        //         return response()->json(['code' => 404, 'message' => 'La classe '.$class_tech_name.' n\'existe pas' ],Response::HTTP_NOT_FOUND);
-        //     }
-        //     // dd($company, $lang, $class_tech_name, $class);
-        //     $instance = null;
-        //     $data_create_ins = ['classe_id' => $class->id, 'parent_id' => null];
-
-        //     $instance = Instance::create($data_create_ins);
-        //     $data = $request->json()->all()['data'];
-        //     $data['auto_generate_formateur_id'] = auth()->user()->id;
-        //     // $data['auto_generate_formateur'] = auth()->user()->prenom.' '.auth()->user()->nom;
-        //     $data['auto_generate_formateur']= 'admin';
-        //     $lib_formation = '';
-        //     foreach($data as $key => $value) {
-        //         $attribute = Attribute::where(['tech_name' => $key, 'classe_id' => $class->id])->first();
-        //         $attribute->managerAttributeSimpleData((!empty($value) ? $value : "Aucune réponse"), $instance->id);
-        //         if (trim($key) == 'lib' && $class_tech_name =='formation') {
-        //             $lib_formation = $value;
-        //         }
-        //     }
-        //     // En particulier si le classe est formation, on va creer un sondage
-        //     if ($class_tech_name =='formation') {
-        //         //On va dater la creation de la formation
-        //         try {
-        //             //code...
-        //             foreach (['date_modification'=> date('d/m/Y H:i:s'), 'date_creation' => date('d/m/Y H:i:s') ] as $key => $value) {
-        //                 # code...
-        //                 $attribute = Attribute::where(['tech_name' => $key, 'classe_id' => $class->id])->first();
-        //                 $attribute->managerAttributeSimpleData($value, $instance->id);
-        //                 # code...
-        //             }
-        //         } catch (\Throwable $th) {
-        //             //throw $th;
-        //         }
-
-        //         $class_sondage = Classe::create([
-        //             'lib' => $lib_formation,
-        //             'tech_name' => 'sondage-'.$instance->id,
-        //             'company_id' => $company->id,
-        //             'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.SondageResult'])->first()->id,
-        //             'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
-        //         ]);
-
-        //         $gac = Component::where(['lib' => 'com.webtinix.infusio.GroupeAttributes'])->first();
-        //         $group = GroupeAttribute::create(['classe_id' => $class_sondage->id, 'position' => 1, 'lib' => 'Sondage ' . $class_sondage->id, 'attr' => '{"className":"grid gap-4"}', 'component_id_multi' => $gac->id, 'component_id_unique' => $gac->id]);
-
-        //         // Fin du formulaire par défaut
-        //         $comment_group = GroupeAttribute::create(['classe_id' => $class_sondage->id, 'position' => 2, 'lib' => 'Commentaire','attr' => '{"className":"grid gap-4"}', 'component_id_multi' => $gac->id, 'component_id_unique' => $gac->id]);
-        //         $attribute_sub = Attribute::create([
-        //             'tech_name' => 'commentaire'.$class_sondage->tech_name,
-        //             'classe_id' => $class_sondage->id,
-        //             'groupe_attribute_id' => $comment_group->id,
-        //             'lib' => 'Commentaire',
-        //             'position' => 1,
-        //             'required' => 0,
-        //             'component_id' =>  Component::where(['lib' => 'com.webtinix.infusio.server.TextArea'])->first()->id,
-        //             'component_id_multi' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
-        //             'component_id_unique' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
-        //         ]);
-
-        //         //creation du data pour lier le sondage avec la formation id_sondage_formation
-        //         $id_sondage_formation = Attribute::where(['tech_name' => 'id_sondage_formation'])->first()->id;
-        //         Data::create(['instance_id' => $instance->id, 'class_id' => $class->id, 'value' => $data['lib'], 'classe_id_src'=> $class_sondage->id, 'attribute_id' => $id_sondage_formation]);
-        //     }
-        //     return response()->json(['code' => 200, 'message' => $class_tech_name.' cree avec succes' ], Response::HTTP_OK);
-        // } catch (\Throwable $th) {
-        //     //throw $th;
-        //     return response()->json(['code' => 404, 'message' => $th->getMessage()], Response::HTTP_NOT_FOUND);
-        // }
     }
 
     public function put(Request $request , $company_uid = null, $lang_iso = null, $instance_id = null)
@@ -544,25 +458,6 @@ class InfusioController extends Controller
         return response()->json([ 'total_result' => $i->count() ],Response::HTTP_OK);
     }
 
-
-
-
-    // Cette fonction est aussi utiliser du côté du Front pour le traitement des chaines
-    // public function nettoyerChaine($chaine) {
-    //     $chaine = str_replace(' ', '_', $chaine);
-    //     $chaine = preg_replace('/[\x{0300}-\x{036f}\W]/u', '', normalizer_normalize($chaine, \Normalizer::FORM_D));
-    //     return $chaine;
-    // }
-    // public function getDate() {
-    //     $maintenant = new DateTime(); // Créer un nouvel objet DateTime
-    //     $annee = $maintenant->format('Y'); // Année sur quatre chiffres
-    //     $mois = $maintenant->format('n'); // Mois (de 1 à 12)
-    //     $jour = $maintenant->format('j'); // Jour du mois (de 1 à 31)
-    //     $heure = $maintenant->format('G'); // Heure (de 0 à 23)
-    //     $minute = $maintenant->format('i'); // Minute (de 0 à 59)
-    //     $seconde = $maintenant->format('s'); // Seconde (de 0 à 59)
-    //     return $annee.$mois.$jour.$heure.$minute.$seconde;
-    // }
 
     function putNbEtudiant(Request $request, $company_uid, $lang_iso, $instance_id,$nbetudiant) {
 
