@@ -225,7 +225,9 @@ class Classe extends Model
             $instance3 = Instance::create($data_create_ins);
             Data::create(['instance_id' => $instance3->id, 'class_id' => $liste_des_options_par_defaut->id, 'value' =>'Satisfait' , 'attribute_id' => $attribute_option->id]);
             $instance4 = Instance::create($data_create_ins);
-            Data::create(['instance_id' => $instance4->id, 'class_id' => $liste_des_options_par_defaut->id, 'value' =>'Tres satisfait' , 'attribute_id' => $attribute_option->id]);
+            Data::create(['instance_id' => $instance4->id, 'class_id' => $liste_des_options_par_defaut->id, 'value' =>'Très satisfait' , 'attribute_id' => $attribute_option->id]);
+
+
 
             // $attribute_option_2 = Attribute::create([
             //     'tech_name' => 'mecontent'.$liste_des_options_par_defaut->tech_name,
