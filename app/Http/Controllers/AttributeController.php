@@ -289,7 +289,7 @@ class AttributeController extends Controller
     {
         $class = null;
         if($id != null){
-            $class = Classe::where('id', $techName)->first();
+            $class = Classe::where('id', $id)->first();
         }
         
         $new = false;
