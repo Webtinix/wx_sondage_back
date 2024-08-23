@@ -223,7 +223,7 @@ class AttributeController extends Controller
         if (count($data['add']) > 0) {
             // dd($instanceSrc_);
             //recuperation ou creation de la classe
-            $class = $this->getOrCreateClass($instanceSrc_['tech_name_class'] ?? null, $instanceSrc_['lib'] ?? null);
+            $class = $this->getOrCreateClass($instanceSrc_['tech_name_class'] ?? null, $instanceSrc_['lib'] ?? null,$instanceSrc_['tech_name_class_id'] ?? null);
 
             //liason de l'attribut parent avec la classe source
             $attribute_parent->classe_src_id = $class[0]->id;
@@ -285,11 +285,11 @@ class AttributeController extends Controller
     }
 
 
-    private function getOrCreateClass($techName, $lib)
+    private function getOrCreateClass($techName, $lib, $id = null)
     {
         $class = null;
-        if($techName != null){
-            $class = Classe::where('tech_name', $techName)->first();
+        if($id != null){
+            $class = Classe::where('id', $techName)->first();
         }
         
         $new = false;
