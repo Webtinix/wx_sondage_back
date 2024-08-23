@@ -46,7 +46,7 @@ class AttributeController extends Controller
      */
     public function post(Request $request)
     {
-        try {
+        // try {
             // Valider les données JSON de la requête
             $validator = Validator::make($request->json()->all(), [
                 'lib' => 'required|string',
@@ -108,7 +108,6 @@ class AttributeController extends Controller
                 $data_att['component_id'] = Component::where(['lib' => $request->json()->all()['component_id']])->first()->id;
             }
 
-
                 # code...
             $data_att['tech_name'] = Str::slug($request->json()->all()['tech_name'] , '-'). time();
             $attribute = Attribute::create($data_att);
@@ -119,93 +118,19 @@ class AttributeController extends Controller
                 $attributelang = AttributeLang::create(['attribute_id' => $attribute->id, 'lang_id' => $lang->id, 'lib' => $request->json()->all()['lib']]);
             }
             
-            $class_sub = null;
             //on verifie si la clé  instance_src existe dans le json de la requête
-            if (!empty($request->json()->all()['instance_src']) && $request->json()->all()['instance_src'] != "") {
-                //on recupere l'id de la classe
-                $data = json_decode($request->json()->all()['instance_src'],true);
-                
-                if (!empty($data['tech_name_class'])) {
-                    $class_sub = Classe::where(['tech_name' =>  $data['tech_name_class']])->first();
-                    if (empty($class_sub)) {
-                        # code...
-                        $class_sub = Classe::create([
-                            'tech_name' =>  $data['tech_name_class'],
-                            'lib' =>  $data['lib'], 
-                            'company_id' => Company::all()->first()->id,
-                            'component_multi_id' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
-                            'component_unique_id' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
-                        ]);
-                    }
-                }
-                $attribute->classe_src_id =  $class_sub->id;
-                $attribute->save();
-                //create du groupe de l'attribut
-                $gac = Component::where(['lib' => 'com.webtinix.infusio.GroupeAttributes'])->first();
-                $groupeAttribute = GroupeAttribute::create([
-                    'classe_id' => $class_sub->id,
-                    'position' => 1,
-                    'component_id_multi' => $gac->id,
-                    'component_id_unique' => $gac->id,
-                    'lib' => $data['lib'],
-                    ]);
-
-                foreach ($data['values'] as $key_ => $value) {
-                    $instance = Instance::create([
-                        'classe_id' => $class_sub->id,
-                    ]);
-                    foreach ($value as $key => $val) {
-                        
-                        if ($key == 'id') {
-                            continue;
-                        }
-                        
-                        $attribute_sub = Attribute::where(['tech_name' => $key, 'classe_id' => $class_sub->id])->first();
-                        if ($attribute_sub == null) {
-                            # code...
-                            $attribute_sub = Attribute::create([
-                                'lib' => $val['lib'],
-                                'tech_name' => $key,
-                                'classe_id' => $class_sub->id,
-                                'groupe_attribute_id' => $groupeAttribute->id,
-                                'position' => 1,
-                                'component_id' =>  Component::where(['lib' => 'com.webtinix.infusio.server.InputText'])->first()->id,
-                                'component_id_multi' => Component::where(['lib' => 'com.webtinix.infusio.server.DataTable'])->first()->id,
-                                'component_id_unique' => Component::where(['lib' => 'com.webtinix.infusio.server.Form'])->first()->id,
-                            ]);
-                        }
-                    //-----creation du data----------
-                    if (is_array($val['value'])) {
-                        # code...
-                        foreach ($val['value'] as $k => $v) {
-                            # code...
-                            $value_sub = Data::create([
-                                'attribute_id' => $attribute_sub->id,
-                                'class_id' => $class_sub->id,
-                                'value' => $v,
-                                'instance_id' => $instance->id,
-                            ]);
-                        } 
-                    }else {
-                        # code...
-                        $value_sub = Data::create([
-                            'attribute_id' => $attribute_sub->id,
-                            'class_id' => $class_sub->id,
-                            'value' => $val['value'],
-                            'instance_id' => $instance->id,
-                        ]);
-                    }
-                        
-                    }
-                }
-                
+            // dd($request->json()->all()['instance_src']);
+            $instanceSrc = $data_att['instance_src'];
+            if (!empty($instanceSrc)) {
+                $this->handleInstanceSrc($instanceSrc, $attribute);
             }
+            //on verifie si la clé  instance_src existe dans le json de la requête
             // Retourner une réponse JSON avec l'attribut créé
             return response()->json(['message' => 'Attribut créé avec succès.', 'code' => '200' ], Response::HTTP_OK);
-        } catch (\Exception $e) {
-            // En cas d'erreur, retourner une réponse avec un message d'erreur
-            return response()->json(['error' => 'Une erreur est survenue lors de la création de l\'attribut.', 'message' => $e], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        // } catch (\Exception $e) {
+        //     // En cas d'erreur, retourner une réponse avec un message d'erreur
+        //     return response()->json(['error' => 'Une erreur est survenue lors de la création de l\'attribut.', 'message' => $e], Response::HTTP_INTERNAL_SERVER_ERROR);
+        // }
     }
 
 
@@ -237,6 +162,7 @@ class AttributeController extends Controller
 
             // Gérer les instances si `instance_src` est présent
             if (!empty($data['instance_src'])) {
+                // dd($data['instance_src']);
                 $this->handleInstanceSrc($data['instance_src'], $attribute);
             }
 
@@ -287,24 +213,53 @@ class AttributeController extends Controller
         return Component::where('lib', $componentLib)->first()->id ?? $default;
     }
 
-    private function handleInstanceSrc($instanceSrc, $attribute)
-    {
-        $data = json_decode($instanceSrc, true);
-        $this->removeDeletedAttributes($data);
-        $class = $this->getOrCreateClass($data['tech_name_class'] ?? null, $data['lib'] ?? null);
+    private function handleInstanceSrc($instanceSrc, $attribute_parent)
+    {   
+        $instanceSrc_ = json_decode($instanceSrc, true);
+        $data = json_decode($instanceSrc, true)['values'];
+        // dd($data);
+        // recherche de la clé ['values'][0]['delete'] dans l'instanceSrc_ et procerdure de suppression des instances et des données liees a l'attribut
         
-        $attribute->classe_src_id = $class[0]->id;
-        $attribute->save();
-        $groupeAttribute = null;
-        if ($class[1] == true) {
-            # code...
-            $groupeAttribute = $this->createGroupeAttribute($class[0]->id, $data['lib']);
-        }else {
-            # code...
-            $groupeAttribute = $class[2];
+        if (count($data['add']) > 0) {
+            // dd($instanceSrc_);
+            //recuperation ou creation de la classe
+            $class = $this->getOrCreateClass($instanceSrc_['tech_name_class'] ?? null, $instanceSrc_['lib'] ?? null);
+
+            //liason de l'attribut parent avec la classe source
+            $attribute_parent->classe_src_id = $class[0]->id;
+            $attribute_parent->save();
+            
+            //recuperation ou creation du groupe d'attribut
+            $groupeAttribute = null;
+            if ($class[1] == true) {
+                # code...
+                $groupeAttribute = $this->createGroupeAttribute($class[0]->id, $instanceSrc_['lib']);
+            }else {
+                # code...
+                $groupeAttribute = $class[2];
+            }
+
+            $attribute = Attribute::where('tech_name', $instanceSrc_['attribute_tech_name'])->first();
+
+            if (!$attribute) {
+                # code...
+                $attribute = Attribute::create([
+                    'tech_name' => $instanceSrc_['attribute_tech_name'],
+                    'classe_id' => $class[0]->id,
+                    'groupe_attribute_id' => $groupeAttribute->id,
+                    'position' => 1,
+                    'component_id' => Component::where('lib', 'com.webtinix.infusio.server.InputText')->first()->id,
+                    'component_id_multi' => Component::where('lib', 'com.webtinix.infusio.server.DataTable')->first()->id,
+                    'component_id_unique' => Component::where('lib', 'com.webtinix.infusio.server.Form')->first()->id,
+                ]);
+            }
+
+            $attributeId = $attribute->id;
+            
+            //creation des instances et des données liees à l'attribut
+            $this->createInstancesAndData($data['add'], $class[0]->id, $attributeId);
         }
-        
-        $this->createInstancesAndData($data['values'], $class[0]->id, $groupeAttribute->id);
+        $this->removeDeletedDataAndInstances($data['delete']);
     }
 
     function transformTab($tab) : array{
@@ -315,66 +270,28 @@ class AttributeController extends Controller
         }
         return $tab_result;
     }
-    private function removeDeletedAttributes(&$data)
+    private function removeDeletedDataAndInstances($tab_instance)
     {
-        // $this->_instance_pre = 12;
-        // Parcourt les valeurs dans le tableau 'values'
-        foreach ($data['values'] as $key_ => $value) {
-            // Vérifie si l'ID est présent et non nul
-            if (isset($value['id']) && !is_null($value['id']) && is_numeric($value['id'])) {
-                $this->_instance_pre = Instance::where('id', $value['id'])->first();
-                unset($data['values'][$key_]);
-                if (!key_exists('deleted', $this->transformTab($value)[1])) {
-                    continue;
-                }
+        // Parcourt les valeurs dans le tableau et supprime les instances et les données liees à l'attribut
+        foreach ($tab_instance as $key => $value) {
+            $i = Instance::where('id', $value)->first();
+            if ($i) {
+                $i->datas()->each(function($data) {
+                    $data->delete();  
+                });
+                $i->delete();
             }
-            // if () {
-                // Vérifie chaque attribut du tableau pour voir si 'deleted' est défini et égal à 1
-            foreach ($value as $key => $val) {
-                if (isset($val['deleted']) && $val['deleted'] == 1) {
-                    // Supprime les attributs et les instances liés
-                    $this->deleteAttributeAndInstances($key, $value['id']);
-                    // Supprime l'élément du tableau principal
-                    unset($data['values'][$key_]);
-                    break; // Sort de la boucle après la suppression
-                }
-            }
-            // }
-                // dd($this->_instance_pre);
-            
         }
-        // Réindexe le tableau après la suppression
-        $data['values'] = array_values($data['values']);
-        // dd($data);
     }
 
-    private function deleteAttributeAndInstances($techName, $id_instance_delete = null)
-    {
-        $attribute = Attribute::where('tech_name', $techName)->first();
-        if ($attribute) {
-            $groupeAttribute = $attribute->groupeAttribute;
-            $groupeAttribute->attributes()->each(function($attribute) {
-                // Supprimer les données associées
-                $attribute->datas()->each(function($data) {
-                    $data->delete();
-                });
-                $attribute->delete();
-            });
-            $groupeAttribute->delete();
-            if ($id_instance_delete) {
-                $i = Instance::where('id', $id_instance_delete)->first()->delete();
-            }
-        }
-    }
 
     private function getOrCreateClass($techName, $lib)
     {
         $class = null;
-        if (!empty($this->_instance_pre)) {
-            # code...
-            $class = Classe::where('tech_name', $this->_instance_pre->classe()->first()->tech_name)->first();
+        if($techName != null){
+            $class = Classe::where('tech_name', $techName)->first();
         }
-        // dd($class);
+        
         $new = false;
         $g = null;
         if ($class == null) {
@@ -406,38 +323,11 @@ class AttributeController extends Controller
         ]);
     }
 
-    private function createInstancesAndData($values, $classId, $groupeAttributeId)
+    private function createInstancesAndData($values, $classId, $attributeId)
     {
         foreach ($values as $valueSet) {
             $instance = Instance::create(['classe_id' => $classId]);
-            foreach ($valueSet as $key => $val) {
-                if ($key == 'id') continue;
-
-                $attribute = Attribute::where('tech_name', $key)->first();
-                if (empty($attribute))
-                    $attribute = Attribute::create([
-                        'tech_name' => $key,
-                        'classe_id' => $classId,
-                        'groupe_attribute_id' => $groupeAttributeId,
-                        'position' => 1,
-                        'component_id' => Component::where('lib', 'com.webtinix.infusio.server.InputText')->first()->id,
-                        'component_id_multi' => Component::where('lib', 'com.webtinix.infusio.server.DataTable')->first()->id,
-                        'component_id_unique' => Component::where('lib', 'com.webtinix.infusio.server.Form')->first()->id,
-                    ]);
-                // $attribute = Attribute::firstOrCreate([
-                //     'tech_name' => $key,
-                //     'classe_id' => $classId,
-                // ], [
-                //     'lib' => $val['lib'] ?? '',
-                //     'groupe_attribute_id' => $groupeAttributeId,
-                //     'position' => 1,
-                //     'component_id' => Component::where('lib', 'com.webtinix.infusio.server.InputText')->first()->id,
-                //     'component_id_multi' => Component::where('lib', 'com.webtinix.infusio.server.DataTable')->first()->id,
-                //     'component_id_unique' => Component::where('lib', 'com.webtinix.infusio.server.Form')->first()->id,
-                // ]);
-
-                $this->createData($val['value'], $attribute->id, $instance->id, $classId);
-            }
+            $this->createData($valueSet, $attributeId, $instance->id, $classId);
         }
     }
 
